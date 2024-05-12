@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
+import time
 
 def analyze_wav_file(file_path, block_size):
     # WAV-Datei einlesen
@@ -16,6 +17,9 @@ def analyze_wav_file(file_path, block_size):
 
     # Berechne die Anzahl der Blöcke
     num_blocks = num_samples - block_size + 1
+
+    # Liste zur Speicherung der aggregierten FFT-Ergebnisse
+    aggregated_fft = np.zeros(block_size) #//2) Redundanz der Spiegelung entfernen?
 
     # Liste zur Speicherung der Frequenzanteile
     frequencies = []
@@ -40,9 +44,15 @@ def analyze_wav_file(file_path, block_size):
         # Finde die Phase dieser Frequenz
         phase = np.angle(fft_result[max_freq_index])
 
+        # Addiere die Amplituden der FFT-Ergebnisse
+        aggregated_fft += np.abs(fft_result)
+
         frequencies.append(max_freq)
         amplitudes.append(amplitude)
         phases.append(phase)
+
+    # Mittelwert der aggregierten FFT berechnen
+    aggregated_fft /= num_blocks
 
     # Aggregiere die Ergebnisse pro Frequenz
     unique_frequencies = np.unique(frequencies)
@@ -66,82 +76,88 @@ def analyze_wav_file(file_path, block_size):
         mean_phases.append(mean_phase)
         std_phases.append(std_phase)
 
-    return unique_frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases
+    return unique_frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft
 
 def plot_frequency_mean(frequencies, mean_amplitudes):
     plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, mean_amplitudes, marker='o')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Mean Amplitude')
-    plt.title('Mean Amplitude per Frequency')
+    plt.plot(frequencies, mean_amplitudes, color='blue', marker='.')
+    plt.xlabel('Frequenz (Hz)')
+    plt.ylabel('Durchschnitt Amplitude')
+    plt.title('Durchschnitt Amplitude pro Frequenz')
     plt.grid(True)
     plt.show()
 
 def plot_frequency_std(frequencies, std_amplitudes):
     plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, std_amplitudes, marker='o', color='orange')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Standard Deviation of Amplitude')
-    plt.title('Standard Deviation of Amplitude per Frequency')
+    plt.plot(frequencies, std_amplitudes, color='orange', marker='.')
+    plt.xlabel('Frequenz (Hz)')
+    plt.ylabel('Standard Abweichung der Amplitude')
+    plt.title('Standard Abweichung der Amplitude pro Frequenz')
     plt.grid(True)
     plt.show()
 
 def plot_main_frequencies(main_frequencies, main_amplitudes):
     plt.figure(figsize=(10, 6))
-    plt.scatter(main_frequencies, main_amplitudes, color='red', label='Main Frequencies')
-    plt.xlabel('Frequency (Hz)')
+    plt.scatter(main_frequencies, main_amplitudes, color='red', marker='.')
+    plt.xlabel('Frequenz (Hz)')
     plt.ylabel('Amplitude')
-    plt.title('Main Frequencies and their Amplitudes')
+    plt.title('Hauptfrequenzen und ihre Amplituden')
     plt.grid(True)
     plt.legend()
     plt.show()
 
 def plot_phase_mean(frequencies, mean_phases):
     plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, mean_phases, marker='o', color='green')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Mean Phase')
-    plt.title('Mean Phase per Frequency')
+    plt.plot(frequencies, mean_phases, color='green', marker='.')
+    plt.xlabel('Frequenz (Hz)')
+    plt.ylabel('Durchschnitt der Phase')
+    plt.title('Durchschnitt Phase pro Frequenz')
     plt.grid(True)
     plt.show()
 
 def plot_phase_std(frequencies, std_phases):
     plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, std_phases, marker='o', color='purple')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Standard Deviation of Phase')
-    plt.title('Standard Deviation of Phase per Frequency')
+    plt.plot(frequencies, std_phases, color='purple', marker='.')
+    plt.xlabel('Frequenz (Hz)')
+    plt.ylabel('Standard Abweichung der Phase')
+    plt.title('Standard Abweichung der Phase pro Frequenz')
     plt.grid(True)
     plt.show()
 
-def plot_spectrum(frequencies, amplitudes, sample_rate):
+def plot_spectrogram(sample_rate, frequencies, amplitudes):
     plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, amplitudes)
-    plt.xlabel('Frequency (Hz)')
+    plt.plot(frequencies, amplitudes, color='blue')
+    plt.xlabel('Frequenz (Hz)')
     plt.ylabel('Amplitude')
-    plt.title('Frequency Spectrum')
-    plt.xlim(0, sample_rate / 2)
+    plt.title('Spektrogramm')
     plt.grid(True)
     plt.show()
 
 if __name__ == "__main__":
+
+    startTime = time.time()
+
     file_path = "../resources/Geheimnisvolle_Wellenlaengen.wav"
-    block_size = 1024  # Sie können die Blockgröße anpassen
-    frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases = analyze_wav_file(file_path, block_size)
+    block_size = 512
+    # Sie können die Blockgröße anpassen
+    frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft = analyze_wav_file(file_path, block_size)
     plot_frequency_mean(frequencies, mean_amplitudes)
     plot_frequency_std(frequencies, std_amplitudes)
     plot_main_frequencies(frequencies, mean_amplitudes)
     plot_phase_mean(frequencies, mean_phases)
     plot_phase_std(frequencies, std_phases)
 
-    # Zusätzliches Spektraldiagramm
-    # sample_rate, data = wavfile.read(file_path)
-    # fft_result = np.fft.fft(data)
-    # frequency_axis = np.fft.fftfreq(len(fft_result), 1/sample_rate)
-    # plot_spectrum(frequency_axis[:len(frequency_axis)//2], np.abs(fft_result)[:len(fft_result)//2], sample_rate)
+    frequency_axis = np.fft.fftfreq(len(aggregated_fft)*2, 1/sample_rate)[:len(aggregated_fft)]
+    plot_spectrogram(sample_rate, frequency_axis, aggregated_fft)
 
 
+    runTime = time.time() - startTime
 
-#TODO: Diagramm in main2.py auch hier reinschreiben
+    minutes = runTime // 60
+    seconds = runTime % 60
+
+    print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
+
 #TODO: Das plotten in eine andere Datei verlagern
+#TODO: Eigene fft Methode implementieren
 #TODO: Mit den Blockgrößen herumexperimentieren
