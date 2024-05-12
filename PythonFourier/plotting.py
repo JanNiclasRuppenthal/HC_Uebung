@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
 
 def read_data_as_np_array(filename):
     return np.loadtxt(filename)
 
-def plot_data(data01, data02, color, yLabel, title):
+def plot_data(data01, data02, color, linestyle, yLabel, title):
     plt.figure(figsize=(10, 6))
-    plt.plot(data01, data02, color=color, marker='.')
+    plt.plot(data01, data02, color=color, marker='.', linestyle=linestyle)
     plt.xlabel('Frequenz (Hz)')
     plt.ylabel(yLabel)
     plt.title(title)
@@ -22,15 +23,6 @@ def scatter_data(data01, data02, color, yLabel, title):
     plt.grid(True)
     plt.show()
 
-def plot_spectrogram(frequencies, amplitudes):
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, amplitudes, color='blue')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Amplitude')
-    plt.title('Spektrogramm')
-    plt.grid(True)
-    plt.show()
-
 def main():
 
     frequencies = read_data_as_np_array('frequencies.txt')
@@ -43,17 +35,31 @@ def main():
 
 
 
-    plot_data(frequencies, mean_amplitudes, 'blue', 'Durchschnittliche Amplitude', 'Durchschnittliche Amplitude pro Frequenz')
-    plot_data(frequencies, std_amplitudes, 'orange', 'Standard Abweichung der Amplitude', 'Standard Abweichung der Amplitude pro Frequenz')
+    plot_data(frequencies, mean_amplitudes, 'blue', '-', 'Durchschnittliche Amplitude', 'Durchschnittliche Amplitude pro Frequenz')
+    plot_data(frequencies, std_amplitudes, 'orange', '-', 'Standard Abweichung der Amplitude', 'Standard Abweichung der Amplitude pro Frequenz')
 
     scatter_data(frequencies, mean_amplitudes, 'red', 'Amplitude', 'Hauptfrequenzen und ihre Amplituden')
 
-    plot_data(frequencies, mean_phases, 'green', 'Durchschnittliche Phase', 'Durchschnittliche Phase pro Frequenz')
-    plot_data(frequencies, std_phases, 'purple', 'Standard Abweichung der Phase', 'Standard Abweichung der Phase pro Frequenz')
+    plot_data(frequencies, mean_phases, 'green', '-', 'Durchschnittliche Phase', 'Durchschnittliche Phase pro Frequenz')
+    plot_data(frequencies, std_phases, 'purple', '-', 'Standard Abweichung der Phase', 'Standard Abweichung der Phase pro Frequenz')
 
 
+    # Berechne die Frequenzachse
     frequency_axis = np.fft.fftfreq(len(aggregated_fft)*2, 1/sample_rate)[:len(aggregated_fft)]
-    plot_data(frequency_axis, aggregated_fft, 'blue', 'Amplitude', 'Spektrogramm')
+
+    # Plot des Spektrogramms
+    plot_data(frequency_axis, aggregated_fft, 'blue', '-', 'Amplitude', 'Spektrogramm')
+
+    # Finde die lokalen Maxima in den Amplituden
+    peaks, _ = find_peaks(aggregated_fft)
+
+    plot_data(frequency_axis[peaks], aggregated_fft[peaks], 'red', '', 'Amplitude', 'Hauptfrequenzen und ihre Amplitude')
+    plt.show()
+
+
+    # Ausgabe der Positionen der lokalen Maxima
+    print("Positionen der lokalen Maxima:", peaks)
+    print("Frequenzen der lokalen Maxima:", frequency_axis[peaks])
 
 
 if __name__ == "__main__":

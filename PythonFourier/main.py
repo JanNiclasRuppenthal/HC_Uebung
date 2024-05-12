@@ -62,7 +62,7 @@ def analyze_wav_file(file_path, block_size):
     num_blocks = num_samples - block_size + 1
 
     # Liste zur Speicherung der aggregierten FFT-Ergebnisse
-    aggregated_fft = np.zeros(block_size) #//2) Redundanz der Spiegelung entfernen?
+    aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen?
 
     # Liste zur Speicherung der Frequenzanteile
     frequencies = []
@@ -76,6 +76,7 @@ def analyze_wav_file(file_path, block_size):
 
         # Berechne die FFT des Blocks
         fft_result = np.fft.fft(block)
+        # fft_result = my_dft(block)
         # fft_result = FFT_vectorized(block)
 
         # Finde die Frequenz mit der höchsten Amplitude
@@ -89,7 +90,7 @@ def analyze_wav_file(file_path, block_size):
         phase = np.angle(fft_result[max_freq_index])
 
         # Addiere die Amplituden der FFT-Ergebnisse
-        aggregated_fft += np.abs(fft_result)
+        aggregated_fft += np.abs(fft_result[:block_size//2])
 
         frequencies.append(max_freq)
         amplitudes.append(amplitude)
@@ -131,8 +132,8 @@ if __name__ == "__main__":
 
     startTime = time.time()
 
-    file_path = "../resources/Geheimnisvolle_Wellenlaengen.wav"  #sys.argv[1]
-    block_size = 512 #sys.argv[2]
+    file_path = "../resources/nicht_zu_laut_abspielen_kurz.wav"  #sys.argv[1]
+    block_size = 1024 #sys.argv[2]
     # Sie können die Blockgröße anpassen
     frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft = analyze_wav_file(file_path, block_size)
 
@@ -151,5 +152,7 @@ if __name__ == "__main__":
 
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
-#TODO: Block_size halbieren?
 #TODO: Mit den Blockgrößen herumexperimentieren
+#TODO: Daten verbessern (besonders die Hauptfrequenzen)
+#TODO: Angabe der Amplituden in dB
+#TODO: Kommentare aendern
