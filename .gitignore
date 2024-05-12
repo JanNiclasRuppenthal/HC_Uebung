@@ -166,3 +166,4 @@ cython_debug/
 
 # More ignoring files
 *.txt
+!README.txt

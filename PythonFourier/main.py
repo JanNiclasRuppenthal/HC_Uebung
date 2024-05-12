@@ -1,7 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.io import wavfile
 import time
+import sys
 
 def analyze_wav_file(file_path, block_size):
     # WAV-Datei einlesen
@@ -78,78 +78,27 @@ def analyze_wav_file(file_path, block_size):
 
     return unique_frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft
 
-def plot_frequency_mean(frequencies, mean_amplitudes):
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, mean_amplitudes, color='blue', marker='.')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Durchschnitt Amplitude')
-    plt.title('Durchschnitt Amplitude pro Frequenz')
-    plt.grid(True)
-    plt.show()
-
-def plot_frequency_std(frequencies, std_amplitudes):
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, std_amplitudes, color='orange', marker='.')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Standard Abweichung der Amplitude')
-    plt.title('Standard Abweichung der Amplitude pro Frequenz')
-    plt.grid(True)
-    plt.show()
-
-def plot_main_frequencies(main_frequencies, main_amplitudes):
-    plt.figure(figsize=(10, 6))
-    plt.scatter(main_frequencies, main_amplitudes, color='red', marker='.')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Amplitude')
-    plt.title('Hauptfrequenzen und ihre Amplituden')
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
-def plot_phase_mean(frequencies, mean_phases):
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, mean_phases, color='green', marker='.')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Durchschnitt der Phase')
-    plt.title('Durchschnitt Phase pro Frequenz')
-    plt.grid(True)
-    plt.show()
-
-def plot_phase_std(frequencies, std_phases):
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, std_phases, color='purple', marker='.')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Standard Abweichung der Phase')
-    plt.title('Standard Abweichung der Phase pro Frequenz')
-    plt.grid(True)
-    plt.show()
-
-def plot_spectrogram(sample_rate, frequencies, amplitudes):
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, amplitudes, color='blue')
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Amplitude')
-    plt.title('Spektrogramm')
-    plt.grid(True)
-    plt.show()
+def write_data_to_file(data, file_path):
+    with open(file_path, 'w') as file:
+        for item in data:
+            file.write(str(item) + '\n')
 
 if __name__ == "__main__":
 
     startTime = time.time()
 
-    file_path = "../resources/Geheimnisvolle_Wellenlaengen.wav"
-    block_size = 512
+    file_path = "../resources/Geheimnisvolle_Wellenlaengen.wav"  #sys.argv[1]
+    block_size = 512 #sys.argv[2]
     # Sie können die Blockgröße anpassen
     frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft = analyze_wav_file(file_path, block_size)
-    plot_frequency_mean(frequencies, mean_amplitudes)
-    plot_frequency_std(frequencies, std_amplitudes)
-    plot_main_frequencies(frequencies, mean_amplitudes)
-    plot_phase_mean(frequencies, mean_phases)
-    plot_phase_std(frequencies, std_phases)
 
-    frequency_axis = np.fft.fftfreq(len(aggregated_fft)*2, 1/sample_rate)[:len(aggregated_fft)]
-    plot_spectrogram(sample_rate, frequency_axis, aggregated_fft)
-
+    write_data_to_file(frequencies, 'frequencies.txt')
+    write_data_to_file(mean_amplitudes, 'mean_amplitudes.txt')
+    write_data_to_file(std_amplitudes, 'std_amplitudes.txt')
+    write_data_to_file(mean_phases, 'mean_phases.txt')
+    write_data_to_file(std_phases, 'std_phases.txt')
+    write_data_to_file([sample_rate], 'sample_rate.txt')
+    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
 
     runTime = time.time() - startTime
 
@@ -158,6 +107,6 @@ if __name__ == "__main__":
 
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
-#TODO: Das plotten in eine andere Datei verlagern
+
 #TODO: Eigene fft Methode implementieren
 #TODO: Mit den Blockgrößen herumexperimentieren
