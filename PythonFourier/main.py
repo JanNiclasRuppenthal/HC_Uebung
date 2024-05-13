@@ -1,41 +1,77 @@
-import numpy as np
-from scipy.io import wavfile
-from scipy.signal import find_peaks
-import time
+import cmath
 import sys
+import time
+import numpy as np
 
-# You're too slow!
-def my_dft(x):
-    """Compute the discrete Fourier Transform of the 1D array x"""
-    x = np.asarray(x, dtype=float)
-    N = x.shape[0]
-    n = np.arange(N)
-    k = n.reshape((N, 1))
-    M = np.exp(-2j * np.pi * k * n / N)
-    return np.dot(M, x)
+from scipy.io import wavfile
 
 
+def get_all_arguments():
+    file_path = str(sys.argv[1])
+    block_size = int(sys.argv[2])
 
-def FFT_vectorized(x):
-    """A vectorized, non-recursive version of the Cooley-Tukey FFT"""
-    x = np.asarray(x, dtype=float)
-    N = x.shape[0]
+    algorithm_option = str(sys.argv[3]) if (len(sys.argv) > 3) else None
+    if algorithm_option == 'np_fft':
+        func = np.fft.fft
+    elif algorithm_option == 'dft':
+        func = main.dft
+    else:
+        func = main.fft_vectorized
 
-    if np.log2(N) % 1 > 0:
-        raise ValueError("size of x must be a power of 2")
+        if np.log2(block_size) % 1 > 0:
+            raise ValueError("Die Groesse des Samples muss eine Potenz von 2 sein, da sonst der Algorihtmus nicht funktioniert.")
 
-    # N_min here is equivalent to the stopping condition above,
-    # and should be a power of 2
-    N_min = min(N, 32)
+    return file_path, block_size, func
 
-    # Perform an O[N^2] DFT on all length-N_min sub-problems at once
+
+def analyze_wav_file(file_path):
+    sample_rate, data = wavfile.read(file_path)
+
+    ''' 
+    Falls zwei Kanaele (Stereo) in der WAV-Datei existieren, 
+    dann schneiden wir einen Kanal ab, um Rechen- sowie Laufzeit zu sparen.
+    '''
+    if len(data.shape) > 1:
+        data = data[:, 0]
+
+    return data, sample_rate
+
+'''
+Diese Methode wurde von ChatGPT generiert.
+Ich habe die Methode nicht wirklich getestet, da die DFT sehr viel Rechenzeit benoetigt.
+'''
+def dft(data_block):
+    N = len(data_block)
+    X = np.zeros(N, dtype=complex)
+    for k in range(N):
+        for n in range(N):
+            X[k] += data_block[n] * cmath.exp(-2j * np.pi * k * n / N)
+    return X
+
+
+'''
+Die FFT Implementierung habe ich von der folgenden Webseite:
+https://jakevdp.github.io/blog/2013/08/28/understanding-the-fft/
+
+Die Webseite ist sehr interessant, da sie verschiedene Implementierungen miteinander vergleicht.
+Außerdem zeigt der Autor, dass seine DFT Implementierung 1000-mal langsamer ist, als die Implementierung von numpy.
+
+Ich habe den Code ein wenig angepasst.
+'''
+def fft_vectorized(data_block):
+    data_block = np.asarray(data_block, dtype=float)
+    block_size = len(data_block)
+
+    N_min = min(block_size, 32)
+
+    # Berechne DFT auf ein Unterproblem mit einer Groesse von N_min <= 32
     n = np.arange(N_min)
     k = n[:, None]
     M = np.exp(-2j * np.pi * n * k / N_min)
-    X = np.dot(M, x.reshape((N_min, -1)))
+    X = np.dot(M, data_block.reshape((N_min, -1)))
 
-    # build-up each level of the recursive calculation all at once
-    while X.shape[0] < N:
+    # Berechne FFT iterativ, anstatt rekursiv
+    while X.shape[0] < block_size:
         X_even = X[:, :X.shape[1]//2]
         X_odd = X[:, X.shape[1]//2:]
         factor = np.exp(-1j * np.pi * np.arange(X.shape[0])
@@ -45,89 +81,73 @@ def FFT_vectorized(x):
 
     return X.ravel()
 
-
-
-
-def analyze_wav_file(file_path, block_size):
-    # WAV-Datei einlesen
-    sample_rate, data = wavfile.read(file_path)
-
-    # Überprüfen, ob die WAV-Datei Stereo ist
-    if len(data.shape) > 1:
-        # Extrahiere nur einen Kanal (nehmen wir den ersten)
-        data = data[:, 0]
-
-    # Anzahl der Samples in der WAV-Datei
+'''
+Der fuer die Aufgabe 01 eigentliche Analyse Algorithmus
+'''
+def analyze(data, block_size, fourier_function):
     num_samples = len(data)
-
-    # Berechne die Anzahl der Blöcke
     num_blocks = num_samples - block_size + 1
 
-    # Liste zur Speicherung der aggregierten FFT-Ergebnisse
     aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
-    # Analyse der WAV-Datei in Blöcken
+    # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
     for i in range(num_blocks):
-        # Extrahiere den aktuellen Block
         block = data[i:i+block_size]
+        fft_result = fourier_function(block)
 
-        # Berechne die FFT des Blocks
-        fft_result = np.fft.fft(block)
-        # fft_result = my_dft(block)
-        # fft_result = FFT_vectorized(block)
-
-        # Addiere die Amplituden der FFT-Ergebnisse
+        # Summiere alle Ergebnisse auf
         aggregated_fft += np.abs(fft_result[:block_size//2])
 
-    # Mittelwert der aggregierten FFT berechnen
+    # Wir berechnen den Mittelwert, da die Summen sonst zu groß sind
     aggregated_fft /= num_blocks
 
-    return sample_rate, aggregated_fft
+    return aggregated_fft
 
+'''
+Die Umrechung zu Dezibel (dB) ist optional.
+Ich habe dies nur hinzugefügt, damit die Diagramme auch etwas variieren.
+Außerdem sieht man mit der Umwandlung so einige Hauptfrequenzen auf dem Spektrogram besser.
+'''
+def magnitude_to_dB(fft_result):
+    magnitude = np.abs(fft_result)
+    return 20 * np.log10(magnitude)
 
-def get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size):
-    peaks, _ = find_peaks(aggregated_fft)
-
-    main_frequencies = []
-    for peakIndex in peaks:
-        main_frequencies.append(peakIndex * sample_rate / block_size)
-
-    return main_frequencies, peaks
-
-
-
-
+'''
+Einfache Hilfsfunktion, damit ich die relevanten in einer weiteren Datei weiterverarbeiten kann.
+'''
 def write_data_to_file(data, file_path):
     with open(file_path, 'w') as file:
         for item in data:
             file.write(str(item) + '\n')
 
 
-if __name__ == "__main__":
-    startTime = time.time()
-
-    file_path = sys.argv[1]
-    block_size = int(sys.argv[2])
-
-    sample_rate, aggregated_fft = analyze_wav_file(file_path, block_size)
-
-    main_frequencies, peaks = get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size)
-
-    for (freq, index) in [(main_frequencies[index], peaks[index]) for index in range(len(main_frequencies))]:
-        print("Main Frequency {} at index {}".format(freq, index))
-
-
-
-    write_data_to_file([sample_rate], 'sample_rate.txt')
-    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
-
-    runTime = time.time() - startTime
-
-    minutes = runTime // 60
-    seconds = runTime % 60
+def print_run_time(run_time):
+    minutes = run_time // 60
+    seconds = run_time % 60
 
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
-#TODO: Mit den Blockgrößen herumexperimentieren
-#TODO: Angabe der Amplituden in dB
-#TODO: Kommentare aendern
+
+def main():
+    '''
+    Die Zeit wird nur als Zusatz gemessen.
+    Meines Erachtens sollte man auch neben dem Speicher immer die Zeit betrachten.
+    '''
+    start_time = time.time()
+
+    file_path, block_size, fourier_function = get_all_arguments()
+    wav_data, sample_rate = analyze_wav_file(file_path)
+    aggregated_fft = analyze(wav_data, block_size, fourier_function)
+
+    write_data_to_file([sample_rate, block_size], 'sample_rate_and_block_size.txt')
+    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
+    write_data_to_file(magnitude_to_dB(aggregated_fft), 'aggregated_fft_db.txt')
+
+    run_time = time.time() - start_time
+    print_run_time(run_time)
+
+
+if __name__ == "__main__":
+    main()
+
+#TODO: Mit den Blockgrößen herumexperimentieren und dokumentieren
