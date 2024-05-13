@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.io import wavfile
+from scipy.signal import find_peaks
 import time
+import sys
 
 # You're too slow!
 def my_dft(x):
@@ -62,12 +64,7 @@ def analyze_wav_file(file_path, block_size):
     num_blocks = num_samples - block_size + 1
 
     # Liste zur Speicherung der aggregierten FFT-Ergebnisse
-    aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen?
-
-    # Liste zur Speicherung der Frequenzanteile
-    frequencies = []
-    amplitudes = []
-    phases = []
+    aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
     # Analyse der WAV-Datei in Blöcken
     for i in range(num_blocks):
@@ -79,69 +76,48 @@ def analyze_wav_file(file_path, block_size):
         # fft_result = my_dft(block)
         # fft_result = FFT_vectorized(block)
 
-        # Finde die Frequenz mit der höchsten Amplitude
-        max_freq_index = np.argmax(np.abs(fft_result))
-        max_freq = max_freq_index * sample_rate / block_size
-
-        # Finde die Amplitude dieser Frequenz
-        amplitude = np.abs(fft_result[max_freq_index])
-
-        # Finde die Phase dieser Frequenz
-        phase = np.angle(fft_result[max_freq_index])
-
         # Addiere die Amplituden der FFT-Ergebnisse
         aggregated_fft += np.abs(fft_result[:block_size//2])
-
-        frequencies.append(max_freq)
-        amplitudes.append(amplitude)
-        phases.append(phase)
 
     # Mittelwert der aggregierten FFT berechnen
     aggregated_fft /= num_blocks
 
-    # Aggregiere die Ergebnisse pro Frequenz
-    unique_frequencies = np.unique(frequencies)
-    mean_amplitudes = []
-    std_amplitudes = []
-    mean_phases = []
-    std_phases = []
+    return sample_rate, aggregated_fft
 
-    for freq in unique_frequencies:
-        freq_indices = [i for i, f in enumerate(frequencies) if f == freq]
-        freq_amplitudes = [amplitudes[i] for i in freq_indices]
-        freq_phases = [phases[i] for i in freq_indices]
 
-        mean_amplitude = np.mean(freq_amplitudes)
-        std_amplitude = np.std(freq_amplitudes)
-        mean_phase = np.mean(freq_phases)
-        std_phase = np.std(freq_phases)
+def get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size):
+    peaks, _ = find_peaks(aggregated_fft)
 
-        mean_amplitudes.append(mean_amplitude)
-        std_amplitudes.append(std_amplitude)
-        mean_phases.append(mean_phase)
-        std_phases.append(std_phase)
+    main_frequencies = []
+    for peakIndex in peaks:
+        main_frequencies.append(peakIndex * sample_rate / block_size)
 
-    return unique_frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft
+    return main_frequencies, peaks
+
+
+
 
 def write_data_to_file(data, file_path):
     with open(file_path, 'w') as file:
         for item in data:
             file.write(str(item) + '\n')
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     startTime = time.time()
 
-    file_path = "../resources/nicht_zu_laut_abspielen_kurz.wav"  #sys.argv[1]
-    block_size = 1024 #sys.argv[2]
-    # Sie können die Blockgröße anpassen
-    frequencies, mean_amplitudes, std_amplitudes, mean_phases, std_phases, sample_rate, aggregated_fft = analyze_wav_file(file_path, block_size)
+    file_path = sys.argv[1]
+    block_size = int(sys.argv[2])
 
-    write_data_to_file(frequencies, 'frequencies.txt')
-    write_data_to_file(mean_amplitudes, 'mean_amplitudes.txt')
-    write_data_to_file(std_amplitudes, 'std_amplitudes.txt')
-    write_data_to_file(mean_phases, 'mean_phases.txt')
-    write_data_to_file(std_phases, 'std_phases.txt')
+    sample_rate, aggregated_fft = analyze_wav_file(file_path, block_size)
+
+    main_frequencies, peaks = get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size)
+
+    for (freq, index) in [(main_frequencies[index], peaks[index]) for index in range(len(main_frequencies))]:
+        print("Main Frequency {} at index {}".format(freq, index))
+
+
+
     write_data_to_file([sample_rate], 'sample_rate.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
 
@@ -153,6 +129,5 @@ if __name__ == "__main__":
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
 #TODO: Mit den Blockgrößen herumexperimentieren
-#TODO: Daten verbessern (besonders die Hauptfrequenzen)
 #TODO: Angabe der Amplituden in dB
 #TODO: Kommentare aendern
