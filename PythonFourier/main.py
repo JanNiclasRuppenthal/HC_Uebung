@@ -13,13 +13,16 @@ def get_all_arguments():
     algorithm_option = str(sys.argv[3]) if (len(sys.argv) > 3) else None
     if algorithm_option == 'np_fft':
         func = np.fft.fft
-    elif algorithm_option == 'dft':
-        func = main.dft
-    else:
-        func = main.fft_vectorized
+    elif algorithm_option == 'fft_vec':
+        func = fft_vectorized
 
         if np.log2(block_size) % 1 > 0:
             raise ValueError("Die Groesse des Samples muss eine Potenz von 2 sein, da sonst der Algorihtmus nicht funktioniert.")
+
+    elif algorithm_option == 'dft':
+        func = dft
+    else:
+        func = fft
 
     return file_path, block_size, func
 
@@ -80,6 +83,17 @@ def fft_vectorized(data_block):
                        X_even - factor * X_odd])
 
     return X.ravel()
+
+
+def fft(x):
+    N = len(x)
+    if N <= 1:
+        return x
+    even = fft(x[::2])
+    odd = fft(x[1::2])
+    factor = np.exp(-2j * np.pi * np.arange(N) / N)
+    return np.concatenate([even + factor[:N//2] * odd,
+                           even + factor[N//2:] * odd])
 
 '''
 Der fuer die Aufgabe 01 eigentliche Analyse Algorithmus
