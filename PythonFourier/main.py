@@ -110,6 +110,11 @@ def analyze(data, block_size, fourier_function):
         fft_result = fourier_function(block)
 
         # Summiere alle Ergebnisse auf
+        '''
+        Summiere alle Ergebnisse auf.
+        Wir verwenden den Absolutbetrag der Ergebnisse, da diese komplexe Zahlen sind.
+        Der Betrag einer komplexen Zahl ist die Entfernung der Zahl zum Nullpunkt im komplexen Raum.
+        '''
         aggregated_fft += np.abs(fft_result[:block_size//2])
 
     # Wir berechnen den Mittelwert, da die Summen sonst zu groß sind
@@ -117,14 +122,6 @@ def analyze(data, block_size, fourier_function):
 
     return aggregated_fft
 
-'''
-Die Umrechung zu Dezibel (dB) ist optional.
-Ich habe dies nur hinzugefügt, damit die Diagramme auch etwas variieren.
-Außerdem sieht man mit der Umwandlung so einige Hauptfrequenzen auf dem Spektrogram besser.
-'''
-def magnitude_to_dB(fft_result):
-    magnitude = np.abs(fft_result)
-    return 20 * np.log10(magnitude)
 
 '''
 Einfache Hilfsfunktion, damit ich die relevanten in einer weiteren Datei weiterverarbeiten kann.
@@ -155,7 +152,6 @@ def main():
 
     write_data_to_file([sample_rate, block_size], 'sample_rate_and_block_size.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
-    write_data_to_file(magnitude_to_dB(aggregated_fft), 'aggregated_fft_db.txt')
 
     run_time = time.time() - start_time
     print_run_time(run_time)
@@ -163,5 +159,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-#TODO: Mit den Blockgrößen herumexperimentieren und dokumentieren

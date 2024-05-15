@@ -72,23 +72,6 @@ def main():
         'red',
         '-',
         '',
-        'Amplitude (db)',
-        'Spektrogramm mit Markierung der Hauptfrequenzen'
-    )
-
-
-    plot_data(frequency_axis, aggregated_fft_db, 'blue', '-', 'Amplitude (dB)', 'Spektrogramm')
-    plot_data([frequency_axis[peak] for peak in peaks], aggregated_fft_db[peaks], 'red', '', 'Amplitude (dB)', 'Hauptfrequenzen und ihre Amplitude')
-
-    plot_data_together(
-        frequency_axis[:max_len],
-        aggregated_fft_db[:max_len],
-        [frequency_axis[peak] for peak in peaks],
-        aggregated_fft_db[peaks],
-        'blue',
-        'red',
-        '-',
-        '',
         'Amplitude',
         'Spektrogramm mit Markierung der Hauptfrequenzen'
     )
