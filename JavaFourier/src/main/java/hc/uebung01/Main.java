@@ -1,8 +1,6 @@
 package hc.uebung01;
 
 import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.linear.Array2DRowFieldMatrix;
-import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
@@ -26,6 +24,7 @@ public class Main {
 
         String filePath = args[0];
         int blockSize = Integer.parseInt(args[1]);
+        String algorithm_option = (args.length > 2) ?  args[2] : "";
 
         long startTime = System.currentTimeMillis();
 
@@ -33,7 +32,7 @@ public class Main {
         {
             double[] wavData = analyzeWavFile(filePath);
             int sampleRate = getSampleRate(filePath);
-            double[] aggregatedFFT = analyze(wavData, blockSize);
+            double[] aggregatedFFT = analyze(wavData, blockSize, algorithm_option);
 
             writeSampleRateAndBlockSizeToFile("sample_rate_and_block_size.txt", sampleRate, blockSize);
             writeDataToFile("aggregated_fft.txt", aggregatedFFT, blockSize);
@@ -87,7 +86,8 @@ public class Main {
         return (int) audioInputStream.getFormat().getSampleRate();
     }
 
-    public static double[] analyze(double[] data, int blockSize) {
+    public static double[] analyze(double[] data, int blockSize, String algorithm_option)
+    {
         int numSamples = data.length;
         int numBlocks = numSamples - blockSize + 1;
 
@@ -99,15 +99,28 @@ public class Main {
             double[] block = new double[blockSize];
             System.arraycopy(data, i, block, 0, blockSize);
 
-//            Complex[] complex = fftTransformer(block);
+            Complex[] fftResult;
 
-
-            Complex[] temp = new Complex[blockSize];
-            for (int j = 0; j < blockSize; j++)
+            if (algorithm_option.equals("dft"))
             {
-                temp[j] = new Complex(block[j], 0);
+                fftResult = dft(block);
             }
-            Complex[] fftResult = fft(temp);
+            else if (algorithm_option.equals("rec_fft"))
+            {
+                Complex[] temp = new Complex[blockSize];
+                for (int j = 0; j < blockSize; j++)
+                {
+                    temp[j] = new Complex(block[j], 0);
+                }
+                fftResult = fft(temp);
+            }
+            else
+            {
+                fftResult = fftTransformer(block);
+            }
+
+
+
 
             // Summiere die Ergebnisse auf
             for (int j = 0; j < blockSize / 2; j++)
