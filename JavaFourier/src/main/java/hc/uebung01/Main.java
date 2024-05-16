@@ -1,4 +1,4 @@
-package org.example;
+package hc.uebung01;
 
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -15,7 +15,8 @@ import java.nio.file.Paths;
 public class Main {
 
     public static void main(String[] args) {
-        if (args.length < 2) {
+        if (args.length < 2)
+        {
             System.err.println("Usage: java Main <input_file> <block_size>");
             return;
         }
@@ -25,15 +26,19 @@ public class Main {
 
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             double[] wavData = analyzeWavFile(filePath);
             int sampleRate = getSampleRate(filePath);
             double[] aggregatedFFT = analyze(wavData, blockSize);
 
-            writeDataToFile(aggregatedFFT, sampleRate, blockSize);
-        } catch (IOException e) {
+            writeSampleRateAndBlockSizeToFile("sample_rate_and_block_size.txt", sampleRate, blockSize);
+            writeDataToFile("aggregated_fft.txt", aggregatedFFT, blockSize);
+        } catch (IOException e)
+        {
             e.printStackTrace();
-        } catch (UnsupportedAudioFileException e) {
+        } catch (UnsupportedAudioFileException e)
+        {
             throw new RuntimeException(e);
         }
 
@@ -51,19 +56,21 @@ public class Main {
         audioInputStream.read(audioBytes);
 
         int numSamples = numBytes / 2; // Jedes Sample ist 2 Bytes (für 16-bit Audio)
-        if (isStereo) {
+        if (isStereo)
+        {
             numSamples /= 2; // Bei Stereo: halbiere die Anzahl der Samples, um nur einen Kanal zu berücksichtigen
         }
 
         double[] audioData = new double[numSamples];
         boolean isBigEndian = format.isBigEndian();
 
-        for (int i = 0, sampleIndex = 0; i < numBytes; i += 4, sampleIndex++) { // i+=4, da wir nur jeden zweiten Sample (einen Kanal) nehmen
-            int byteIndex = i;
+        for (int byteIndex = 0, sampleIndex = 0; byteIndex < numBytes; byteIndex += 4, sampleIndex++) { // byteIndex+=4, da wir nur jeden zweiten Sample (einen Kanal) nehmen
             int sample = 0;
-            if (isBigEndian) {
+            if (isBigEndian)
+            {
                 sample = (audioBytes[byteIndex] << 8) | (audioBytes[byteIndex + 1] & 0xFF);
-            } else {
+            } else
+            {
                 sample = (audioBytes[byteIndex + 1] << 8) | (audioBytes[byteIndex] & 0xFF);
             }
             audioData[sampleIndex] = sample; // / 32768.0 -> Konvertiere zu Bereich -1.0 bis 1.0 für 16-bit signed
@@ -74,8 +81,7 @@ public class Main {
 
     public static int getSampleRate(String filePath) throws IOException, UnsupportedAudioFileException {
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(Paths.get(filePath).toFile());
-        int sampleRate = (int) audioInputStream.getFormat().getSampleRate();
-        return sampleRate;
+        return (int) audioInputStream.getFormat().getSampleRate();
     }
 
     public static double[] analyze(double[] data, int blockSize) {
@@ -85,19 +91,22 @@ public class Main {
         double[] aggregatedFFT = new double[blockSize / 2]; // Redundanz der Spiegelung entfernen
 
         // Fuer jeden Datenblock wird die FFT berechnet
-        for (int i = 0; i < numBlocks; i++) {
+        for (int i = 0; i < numBlocks; i++)
+        {
             double[] block = new double[blockSize];
             System.arraycopy(data, i, block, 0, blockSize);
             Complex[] fftResult = fft(block);
 
             // Summiere die Ergebnisse auf
-            for (int j = 0; j < blockSize / 2; j++) {
+            for (int j = 0; j < blockSize / 2; j++)
+            {
                 aggregatedFFT[j] += fftResult[j].abs();
             }
         }
 
         // Berechne den Mittelwert
-        for (int i = 0; i < blockSize / 2; i++) {
+        for (int i = 0; i < blockSize / 2; i++)
+        {
             aggregatedFFT[i] /= numBlocks;
         }
 
@@ -106,24 +115,32 @@ public class Main {
 
     public static Complex[] fft(double[] x) {
         FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
-        Complex[] complexData = new Complex[x.length];
-        for (int i = 0; i < x.length; i++) {
-            complexData[i] = new Complex(x[i], 0);
-        }
-        return transformer.transform(complexData, TransformType.FORWARD);
+        return transformer.transform(x, TransformType.FORWARD);
     }
 
-    public static void writeDataToFile(double[] data, int sampleRate, int blockSize) {
-        try (FileWriter writer = new FileWriter("aggregated_fft.txt")) {
-            writer.write("Sample Rate: " + sampleRate + "\n");
-            writer.write("Block Size: " + blockSize + "\n");
-
+    public static void writeDataToFile(String filename, double[] data, int blockSize) {
+        try (FileWriter writer = new FileWriter(filename))
+        {
             // Schreibe die aggregierten FFT-Daten in die Datei
-            for (int i = 0; i < blockSize / 2; i++) {
+            for (int i = 0; i < blockSize / 2; i++)
+            {
                 writer.write(data[i] + "\n");
             }
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
+        }
+    }
+
+
+    public static void writeSampleRateAndBlockSizeToFile(String filename, int sampleRate, int blockSize) {
+        try (FileWriter writer = new FileWriter(filename))
+        {
+            writer.write(sampleRate  +"\n");
+            writer.write(blockSize + "\n");
+        } catch (IOException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 }

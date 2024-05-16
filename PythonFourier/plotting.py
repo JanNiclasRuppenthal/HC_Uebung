@@ -47,7 +47,6 @@ def get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size)
 def main():
     other_data = read_data_as_np_array('sample_rate_and_block_size.txt')
     aggregated_fft = read_data_as_np_array('aggregated_fft.txt')
-    aggregated_fft_db = read_data_as_np_array('aggregated_fft_db.txt')
 
     sample_rate, block_size = other_data[0], other_data[1]
 
