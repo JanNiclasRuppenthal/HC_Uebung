@@ -1,6 +1,8 @@
 package hc.uebung01;
 
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.linear.Array2DRowFieldMatrix;
+import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
@@ -10,6 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 
 public class Main {
@@ -95,7 +98,16 @@ public class Main {
         {
             double[] block = new double[blockSize];
             System.arraycopy(data, i, block, 0, blockSize);
-            Complex[] fftResult = fft(block);
+
+//            Complex[] complex = fftTransformer(block);
+
+
+            Complex[] temp = new Complex[blockSize];
+            for (int j = 0; j < blockSize; j++)
+            {
+                temp[j] = new Complex(block[j], 0);
+            }
+            Complex[] fftResult = fft(temp);
 
             // Summiere die Ergebnisse auf
             for (int j = 0; j < blockSize / 2; j++)
@@ -113,9 +125,60 @@ public class Main {
         return aggregatedFFT;
     }
 
-    public static Complex[] fft(double[] x) {
+    public static Complex[] fftTransformer(double[] dataBlock) {
         FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
-        return transformer.transform(x, TransformType.FORWARD);
+        return transformer.transform(dataBlock, TransformType.FORWARD);
+    }
+
+    public static Complex[] fft(Complex[] dataBlock)
+    {
+        int N = dataBlock.length;
+
+        // Basisfall der Rekursion: wenn die Eingabelänge 1 ist, gibt einfach x zurück
+        if (N <= 1) return dataBlock;
+
+        // Teilen der Eingabe in gerade und ungerade Indizes
+        Complex[] even = new Complex[N / 2];
+        Complex[] odd = new Complex[N / 2];
+
+        for (int i = 0; i < N / 2; i++) {
+            even[i] = dataBlock[2 * i];
+            odd[i] = dataBlock[2 * i + 1];
+        }
+
+        // Rekursive Aufrufe für gerade und ungerade Teile
+        Complex[] q = fft(even);
+        Complex[] r = fft(odd);
+
+        // Kombinieren der Ergebnisse
+        Complex[] y = new Complex[N];
+        for (int k = 0; k < N / 2; k++) {
+            double angle = -2 * Math.PI * k / N;
+            Complex wk = new Complex(Math.cos(angle), Math.sin(angle)).multiply(r[k]);
+            y[k] = q[k].add(wk);
+            y[k + N / 2] = q[k].subtract(wk);
+        }
+
+        return y;
+    }
+
+    public static Complex[] dft(double[] dataBlock)
+    {
+        int N = dataBlock.length;
+        Complex[] X = new Complex[N];
+        Arrays.fill(X, new Complex(0, 0));  // Füllen Sie das Array mit Null-Komplexzahlen
+
+        for (int k = 0; k < N; k++) {
+            Complex sum = new Complex(0, 0);
+            for (int n = 0; n < N; n++) {
+                double angle = -2 * Math.PI * k * n / N;
+                Complex exp = new Complex(Math.cos(angle), Math.sin(angle));  // exponent of complex number is exp(x) = cos(x) + i*sin(x)
+                Complex data = new Complex(dataBlock[n], 0);
+                sum = sum.add(data.multiply(exp));
+            }
+            X[k] = sum;
+        }
+        return X;
     }
 
     public static void writeDataToFile(String filename, double[] data, int blockSize) {

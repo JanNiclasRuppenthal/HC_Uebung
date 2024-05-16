@@ -81,11 +81,6 @@ public class Analyzing
     {
         List<Integer> peaks = new ArrayList<>();
 
-//        if (data.size() > 1 && data.get(0) > data.get(1))
-//        {
-//            peaks.add(0);
-//        }
-
         for (int index = 1; index < data.size(); index++)
         {
             if (data.get(index) > data.get(index - 1) && data.get(index) > data.get(index + 1))
