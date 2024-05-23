@@ -1,9 +1,13 @@
 import cmath
 import sys
 import time
+
 import numpy as np
 
 from scipy.io import wavfile
+
+# Aufgabe 2
+import tracemalloc
 
 
 def get_all_arguments():
@@ -98,14 +102,22 @@ def fft(x):
 '''
 Der fuer die Aufgabe 01 eigentliche Analyse Algorithmus
 '''
+
 def analyze(data, block_size, fourier_function):
     num_samples = len(data)
     num_blocks = num_samples - block_size + 1
 
     aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
+    current, peak = tracemalloc.get_traced_memory()
+    currentDataMB = [current/10**6]
+    peakDataMB = [peak/10**6]
+    # write_data_to_file([current, peak], "memory.txt")
+    # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+
     # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
     for i in range(num_blocks):
+        tracemalloc.reset_peak()
         block = data[i:i+block_size]
         fft_result = fourier_function(block)
 
@@ -117,8 +129,22 @@ def analyze(data, block_size, fourier_function):
         '''
         aggregated_fft += np.abs(fft_result[:block_size//2])
 
+        current, peak = tracemalloc.get_traced_memory()
+        currentDataMB.append(current/10**6)
+        peakDataMB.append(peak/10**6)
+        # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+
+
     # Wir berechnen den Mittelwert, da die Summen sonst zu groß sind
     aggregated_fft /= num_blocks
+
+    current, peak = tracemalloc.get_traced_memory()
+    currentDataMB.append(current/10**6)
+    peakDataMB.append(peak/10**6)
+    write_data_to_file(currentDataMB, "currentMB.txt")
+    write_data_to_file(peakDataMB, "peakMB.txt")
+    # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+    # tracemalloc.stop()
 
     return aggregated_fft
 
@@ -145,10 +171,18 @@ def main():
     Meines Erachtens sollte man auch neben dem Speicher immer die Zeit betrachten.
     '''
     start_time = time.time()
+    tracemalloc.start()
 
     file_path, block_size, fourier_function = get_all_arguments()
     wav_data, sample_rate = analyze_wav_file(file_path)
+
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"Bevor Fourier Analysis: Memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
     aggregated_fft = analyze(wav_data, block_size, fourier_function)
+
+    current, peak = tracemalloc.get_traced_memory()
+    print(f"After Fourier Analysis: Memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+    tracemalloc.stop()
 
     write_data_to_file([sample_rate, block_size], 'sample_rate_and_block_size.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
