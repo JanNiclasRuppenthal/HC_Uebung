@@ -8,6 +8,7 @@ from scipy.io import wavfile
 
 # Aufgabe 2
 import tracemalloc
+from memory_profiler import profile
 
 
 def get_all_arguments():
@@ -102,7 +103,7 @@ def fft(x):
 '''
 Der fuer die Aufgabe 01 eigentliche Analyse Algorithmus
 '''
-
+@profile(precision=4)
 def analyze(data, block_size, fourier_function):
     num_samples = len(data)
     num_blocks = num_samples - block_size + 1
@@ -112,8 +113,6 @@ def analyze(data, block_size, fourier_function):
     current, peak = tracemalloc.get_traced_memory()
     currentDataMB = [current/10**6]
     peakDataMB = [peak/10**6]
-    # write_data_to_file([current, peak], "memory.txt")
-    # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
     # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
     for i in range(num_blocks):
@@ -121,7 +120,6 @@ def analyze(data, block_size, fourier_function):
         block = data[i:i+block_size]
         fft_result = fourier_function(block)
 
-        # Summiere alle Ergebnisse auf
         '''
         Summiere alle Ergebnisse auf.
         Wir verwenden den Absolutbetrag der Ergebnisse, da diese komplexe Zahlen sind.
@@ -132,7 +130,6 @@ def analyze(data, block_size, fourier_function):
         current, peak = tracemalloc.get_traced_memory()
         currentDataMB.append(current/10**6)
         peakDataMB.append(peak/10**6)
-        # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
 
 
     # Wir berechnen den Mittelwert, da die Summen sonst zu groß sind
@@ -143,8 +140,6 @@ def analyze(data, block_size, fourier_function):
     peakDataMB.append(peak/10**6)
     write_data_to_file(currentDataMB, "currentMB.txt")
     write_data_to_file(peakDataMB, "peakMB.txt")
-    # print(f"Current memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
-    # tracemalloc.stop()
 
     return aggregated_fft
 
@@ -164,7 +159,7 @@ def print_run_time(run_time):
 
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
-
+@profile(precision=4)
 def main():
     '''
     Die Zeit wird nur als Zusatz gemessen.
@@ -177,7 +172,7 @@ def main():
     wav_data, sample_rate = analyze_wav_file(file_path)
 
     current, peak = tracemalloc.get_traced_memory()
-    print(f"Bevor Fourier Analysis: Memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
+    print(f"Before Fourier Analysis: Memory usage is {current / 10**6}MB; Peak was {peak / 10**6}MB")
     aggregated_fft = analyze(wav_data, block_size, fourier_function)
 
     current, peak = tracemalloc.get_traced_memory()

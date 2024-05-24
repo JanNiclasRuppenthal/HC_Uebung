@@ -92,11 +92,11 @@ public class Main {
         int numBlocks = numSamples - blockSize + 1;
 
         double[] aggregatedFFT = new double[blockSize / 2]; // Redundanz der Spiegelung entfernen
+        double[] block = new double[blockSize];
 
         // Fuer jeden Datenblock wird die FFT berechnet
         for (int i = 0; i < numBlocks; i++)
         {
-            double[] block = new double[blockSize];
             System.arraycopy(data, i, block, 0, blockSize);
 
             Complex[] fftResult;

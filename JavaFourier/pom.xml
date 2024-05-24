@@ -26,5 +26,37 @@
     </properties>
 
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>Fourier</id>
+                        <configuration>
+                            <mainClass>hc.uebung01.Main</mainClass>
+                            <arguments>
+                                <argument>../resources/nicht_zu_laut_abspielen_kurz.wav</argument>
+                                <argument>1024</argument>
+                                <!--argument>rec_fft</argument-->
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>Analyzing</id>
+                        <configuration>
+                            <mainClass>hc.uebung01.Analyzing</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+
+
 
 </project>
