@@ -17,7 +17,5 @@ if __name__ == '__main__':
     current = read_data_as_np_array('currentMB.txt')
     peak = read_data_as_np_array('peakMB.txt')
 
-    print(np.average(current))
-
     plot_data(current, "Momentaner Speicherbedarf (MB)")
     plot_data(peak, "Hoechster Speicherbedarf (MB)")
