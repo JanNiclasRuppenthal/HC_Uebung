@@ -30,10 +30,14 @@ public class Main {
 
         try
         {
+            System.out.printf("Analyzing %s!\n", filePath);
             double[] wavData = analyzeWavFile(filePath);
             int sampleRate = getSampleRate(filePath);
+
+            System.out.println("Fourieranalysis!");
             double[] aggregatedFFT = analyze(wavData, blockSize, algorithm_option);
 
+            System.out.println("Write results in aggregated_fft.txt");
             writeSampleRateAndBlockSizeToFile("sample_rate_and_block_size.txt", sampleRate, blockSize);
             writeDataToFile("aggregated_fft.txt", aggregatedFFT, blockSize);
         } catch (IOException e)
