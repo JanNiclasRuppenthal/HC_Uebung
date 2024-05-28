@@ -61,10 +61,10 @@ public class Main {
         byte[] audioBytes = new byte[numBytes];
         audioInputStream.read(audioBytes);
 
-        int numSamples = numBytes / 2; // Jedes Sample ist 2 Bytes (für 16-bit Audio)
+        int numSamples = numBytes / 2; // Jedes Sample ist 2 Bytes (fuer 16-bit Audio)
         if (isStereo)
         {
-            numSamples /= 2; // Bei Stereo: halbiere die Anzahl der Samples, um nur einen Kanal zu berücksichtigen
+            numSamples /= 2; // Bei Stereo: halbiere die Anzahl der Samples, um nur einen Kanal zu beruecksichtigen
         }
 
         double[] audioData = new double[numSamples];
@@ -79,7 +79,7 @@ public class Main {
             {
                 sample = (audioBytes[byteIndex + 1] << 8) | (audioBytes[byteIndex] & 0xFF);
             }
-            audioData[sampleIndex] = sample; // / 32768.0 -> Konvertiere zu Bereich -1.0 bis 1.0 für 16-bit signed
+            audioData[sampleIndex] = sample; // / 32768.0 -> Konvertiere zu Bereich -1.0 bis 1.0 fuer 16-bit signed
         }
 
         return audioData;
@@ -151,7 +151,7 @@ public class Main {
     {
         int N = dataBlock.length;
 
-        // Basisfall der Rekursion: wenn die Eingabelänge 1 ist, gibt einfach x zurück
+        // Basisfall der Rekursion: wenn die Eingabelaenge 1 ist, gibt einfach x zurueck
         if (N <= 1) return dataBlock;
 
         // Teilen der Eingabe in gerade und ungerade Indizes
@@ -163,7 +163,7 @@ public class Main {
             odd[i] = dataBlock[2 * i + 1];
         }
 
-        // Rekursive Aufrufe für gerade und ungerade Teile
+        // Rekursive Aufrufe fuer gerade und ungerade Teile
         Complex[] q = fft(even);
         Complex[] r = fft(odd);
 
@@ -183,7 +183,7 @@ public class Main {
     {
         int N = dataBlock.length;
         Complex[] X = new Complex[N];
-        Arrays.fill(X, new Complex(0, 0));  // Füllen Sie das Array mit Null-Komplexzahlen
+        Arrays.fill(X, new Complex(0, 0));  // Fuellen Sie das Array mit Null-Komplexzahlen
 
         for (int k = 0; k < N; k++) {
             Complex sum = new Complex(0, 0);

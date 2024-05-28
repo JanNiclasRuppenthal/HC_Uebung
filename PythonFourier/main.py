@@ -62,7 +62,7 @@ Die FFT Implementierung habe ich von der folgenden Webseite:
 https://jakevdp.github.io/blog/2013/08/28/understanding-the-fft/
 
 Die Webseite ist sehr interessant, da sie verschiedene Implementierungen miteinander vergleicht.
-Außerdem zeigt der Autor, dass seine DFT Implementierung 1000-mal langsamer ist, als die Implementierung von numpy.
+Ausserdem zeigt der Autor, dass seine DFT Implementierung 1000-mal langsamer ist, als die Implementierung von numpy.
 
 Ich habe den Code ein wenig angepasst.
 '''
@@ -132,7 +132,7 @@ def analyze(data, block_size, fourier_function):
         peakDataMB.append(peak/10**6)
 
 
-    # Wir berechnen den Mittelwert, da die Summen sonst zu groß sind
+    # Wir berechnen den Mittelwert, da die Summen sonst zu gross sind
     aggregated_fft /= num_blocks
 
     current, peak = tracemalloc.get_traced_memory()

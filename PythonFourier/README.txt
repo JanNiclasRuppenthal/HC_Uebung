@@ -23,7 +23,7 @@ sudo apt-get install libopenblas-dev
 
 
 
-Die Datei plotting.py erstellt Diagramme zu den Hauptfrequenzen, die in verschiedene TXT-Dateien geschrieben werden. Dazu muss man zuerst eine Fourieranalyse durchgefuehrt haben. Die Datei kann folgendermaßen gestartet werden:
+Die Datei plotting.py erstellt Diagramme zu den Hauptfrequenzen, die in verschiedene TXT-Dateien geschrieben werden. Dazu muss man zuerst eine Fourieranalyse durchgefuehrt haben. Die Datei kann folgendermassen gestartet werden:
 python plotting.py oder python3 plotting.py 
 
 Die letzte Datei plotting_memory.py erstellt Diagramme zum gemessenem Speicherbedarf. Die Diagramme koennen auch nur nach einer Fourieranalyse generiert werden. Mit dem folgendem Befehl kann das Skript gestartet werden:
