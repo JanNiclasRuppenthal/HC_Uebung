@@ -1,22 +1,23 @@
-Sie haben auch die Moeglichkeit eine .jar ueber Maven zu erstellen:
+Fuer das Java-Programm habe ich das Build-Tool Maven verwendet. Das macht die Sache fuer die Kompilierung einfacher. Um nun das Programm zu starten, muss man JAR-Dateien erstellen:
 mvn clean package
 
-
-Nach diesem Befehl werden zwei .jar-Dateien im Ordner target erstellt:
-Fourier-jar-with-dependencies.jar               -> Datei fuer die Fourieranalyse
-Analyzing-jar-with-dependencies.jar             -> Datei, die nach der Fourieranalyse die Hauptfrequenzen berechnet.
-
+Nach diesem Befehl werden zwei JAR-Dateien im Ordner target erstellt:
+Fourier-jar-with-dependencies.jar           -> Datei fuer die Fourieranalyse
+Analyzing-jar-with-dependencies.jar         -> Datei, die nach der Fourieranalyse die Hauptfrequenzen berechnet.
 
 
-Wenn sie die Fourieranalyse ausfuerhen moechten, dann verwenden Sie bitte die folgende Zeile:
-java -jar <Pfad zur .jar-Datei in target> <Pfad zur .wav-Datei> <Blockgroesse>
-
-Falls Sie eine spezifische Fourier-Funktion verwenden moechten:
-
-java -jar <Pfad zur Fourier .jar-Datei in target> <Pfad zur .wav-Datei> <Blockgroesse> <Funktion>
+Die erste Datei kann die Fourieranalyse starten. Hierzu benoetigt man den folgenden Befehl:
+java -jar .\target\Fourier-jar-with-dependencies.jar ..\resources\<Name der WAV-Datei> <Blockgroesse>
 
 
+Wenn man nun eine spezifische Funktion fuer die Fourieranalyse verwenden moechte, dann muss man einen Weiteren Parameter uebergeben:
+java -jar .\target\Fourier-jar-with-dependencies.jar ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
+
+Hierbei gibt es zwei weitere Varianten, die man fuer den Parameter Funktion verwenden kann:
+    -dft
+    -rec_fft
 
 
-Wenn Sie die Datei fuer die Hauptfrequenzen ausfuehren moechten, dann verwenden Sie den folgenden Befehl:
-java -jar <Pfad zur Analyzing .jar-Datei in target>
+
+Die Datei Analyzing.java bzw. die JAR-Datei Analyzing-jar-with-dependencies.jar kann verwendet werden, um die Hauptfrequenzen ausgeben zu lassen. Um nun diese Datei zu starten, muss man den folgenden Befehl verwenden:
+java -jar .\target\Analyzing-jar-with-dependencies.jar
