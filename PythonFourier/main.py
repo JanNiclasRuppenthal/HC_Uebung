@@ -8,7 +8,6 @@ from scipy.io import wavfile
 
 # Aufgabe 2
 import tracemalloc
-from memory_profiler import profile
 
 
 def get_all_arguments():
@@ -16,9 +15,9 @@ def get_all_arguments():
     block_size = int(sys.argv[2])
 
     algorithm_option = str(sys.argv[3]) if (len(sys.argv) > 3) else None
-    if algorithm_option == 'np_fft':
-        func = np.fft.fft
-    elif algorithm_option == 'fft_vec':
+    if algorithm_option == 'rec_fft':
+        func = fft
+    elif algorithm_option == 'vec_fft':
         func = fft_vectorized
 
         if np.log2(block_size) % 1 > 0:
@@ -26,8 +25,8 @@ def get_all_arguments():
 
     elif algorithm_option == 'dft':
         func = dft
-    else:
-        func = fft
+    elif algorithm_option is None or algorithm_option == "np_fft":
+        func = np.fft.fft 
 
     return file_path, block_size, func
 
@@ -103,7 +102,6 @@ def fft(x):
 '''
 Der fuer die Aufgabe 01 eigentliche Analyse Algorithmus
 '''
-@profile(precision=4)
 def analyze(data, block_size, fourier_function):
     num_samples = len(data)
     num_blocks = num_samples - block_size + 1
@@ -159,7 +157,6 @@ def print_run_time(run_time):
 
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
-@profile(precision=4)
 def main():
     '''
     Die Zeit wird nur als Zusatz gemessen.

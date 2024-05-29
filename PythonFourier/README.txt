@@ -5,21 +5,20 @@ Danach werden alle verwendeten Bibliotheken installiert. Ich hoffe, dass dies re
 
 
 Um nun das Skript fuer die Fourieranalyse zu starten, muss man den folgenden Befehl verwenden:
-python main.py ..\resources\<Name der WAV-Datei> <Blockgroesse>
+python main.py ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
 
 oder 
 
-python3 main.py ..\resources\<Name der WAV-Datei> <Blockgroesse>
+python3 main.py ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
 
 
+Hierbei gibt es zwei weitere Varianten, die man fuer den Parameter Funktion verwenden kann:
+    - dft
+    - rec_fft
+    - vec_fft
+    - np_fft
 
-
-
-Falls Sie die Fehlermeldung "ImportError: libopenblas.so.0: cannot open shared object file or directory" bekommen, dann muessen sie diese Bibliothek installieren:
-sudo apt-get install libopenblas-dev
-
-
-
+Man kann aber auch den Parameter Funktion weglassen. Dann wird die von numpy implementierte FFT verwendet.
 
 
 
