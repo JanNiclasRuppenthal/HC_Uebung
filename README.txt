@@ -1,5 +1,7 @@
 Dies ist die Abgabe der ersten Uebung von Jan Niclas Ruppenthal (Matrikelnummer: 1481198) zur Veranstaltung "Heterogenous Computing"
 
+Der Ergebnisbericht befindet sich in der PDF "HC_Uebung01_Ruppenthal.pdf". Fuer den Montag habe ich auch Folien erstellt, die sich in der Datei "Praesentationsfolien.pdf" befinden.
+
 In diesem Repository befinden sich vier verschiedene Ordner:
     - JavaFourier
     - PlottingJavaMemory
@@ -17,3 +19,5 @@ Im letzten Ordner resources befinden sich verschiedene WAV-Dateien zum Ausprobie
     - nicht_zu_laut_abspielen_kurz.wav (15 Sekunden)
     - nicht_zu_laut_abspielen_sehr_kurz.wav (1 Sekunde)
     - nicht_zu_laut_abspielen.wav (2 Minuten)
+
+

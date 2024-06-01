@@ -12,7 +12,7 @@ oder
 python3 main.py ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
 
 
-Hierbei gibt es zwei weitere Varianten, die man fuer den Parameter Funktion verwenden kann:
+Hierbei gibt es verschiedene Varianten, die man fuer den Parameter Funktion verwenden kann:
     - dft
     - rec_fft
     - vec_fft

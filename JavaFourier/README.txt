@@ -10,12 +10,14 @@ Die erste Datei kann die Fourieranalyse starten. Hierzu benoetigt man den folgen
 java -jar .\target\Fourier-jar-with-dependencies.jar ..\resources\<Name der WAV-Datei> <Blockgroesse>
 
 
-Wenn man nun eine spezifische Funktion fuer die Fourieranalyse verwenden moechte, dann muss man einen Weiteren Parameter uebergeben:
+Wenn man nun eine spezifische Funktion fuer die Fourieranalyse verwenden moechte, dann muss man einen weiteren Parameter uebergeben:
 java -jar .\target\Fourier-jar-with-dependencies.jar ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
 
 Hierbei gibt es zwei weitere Varianten, die man fuer den Parameter Funktion verwenden kann:
     -dft
     -rec_fft
+
+Wenn kein Parameter fuer Funktion uebergeben wird, dann wird die implementierte FFT von org.apache.commons.math3.transform.FastFourierTransformer verwendet.
 
 
 
