@@ -59,12 +59,10 @@ def main():
     plot_data(frequency_axis, aggregated_fft, 'blue', '-', 'Amplitude', 'Spektrogramm')
     plot_data([frequency_axis[peak] for peak in peaks], aggregated_fft[peaks], 'red', '', 'Amplitude', 'Hauptfrequenzen und ihre Amplitude')
 
-    # Verkleinere das Diagramm
-    max_len = frequency_axis.index([frequency_axis[peak] for peak in peaks][-1])
 
     plot_data_together(
-        frequency_axis[:max_len],
-        aggregated_fft[:max_len],
+        frequency_axis,
+        aggregated_fft,
         [frequency_axis[peak] for peak in peaks],
         aggregated_fft[peaks],
         'blue',
