@@ -1,109 +1,115 @@
+import random
+import sys
 import numpy as np
 from scipy.io.wavfile import write
 
-def generate_sine_wave(frequency, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    return 0.5 * np.sin(2 * np.pi * frequency * t)
+global duration, sample_rate, timestamps
 
-def generate_combined_wave(frequencies, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    signal = np.zeros_like(t)
+def sine_wave(frequency):
+    return 0.5 * np.sin(2 * np.pi * frequency * timestamps)
+
+def polyphonic_wave(frequencies):
+    signal = np.zeros_like(timestamps)
     for frequency in frequencies:
-        signal += 0.5 * np.sin(2 * np.pi * frequency * t)
+        signal += 0.5 * np.sin(2 * np.pi * frequency * timestamps)
     return signal
 
-def generate_chirp_wave(start_freq, end_freq, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    return 0.5 * np.sin(2 * np.pi * (start_freq + (end_freq - start_freq) * t / duration) * t)
+def chirp_wave(start_freq, end_freq):
+    return 0.5 * np.sin(2 * np.pi * (start_freq + (end_freq - start_freq) * timestamps / duration) * timestamps)
 
-def generate_noise(duration, sample_rate):
+def noise():
     return 0.5 * np.random.normal(0, 1, int(sample_rate * duration))
 
-def save_wave_file(filename, data, sample_rate):
-    scaled = np.int16(data / np.max(np.abs(data)) * 32767)
-    write(filename, sample_rate, scaled)
-
-# Parameter
-sample_rate = 44100  # 44.1 kHz
-duration = 5  # 5 seconds
-
-# Generieren und Speichern der WAV-Dateien
-sine_wave = generate_sine_wave(440, duration, sample_rate)
-save_wave_file("../sine_wave_440Hz.wav", sine_wave, sample_rate)
-
-combined_wave = generate_combined_wave([440, 880, 1760], duration, sample_rate)
-save_wave_file("../combined_wave.wav", combined_wave, sample_rate)
-
-chirp_wave = generate_chirp_wave(20, 20000, duration, sample_rate)
-save_wave_file("../chirp_wave.wav", chirp_wave, sample_rate)
-
-noise = generate_noise(duration, sample_rate)
-save_wave_file("../noise.wav", noise, sample_rate)
-
-def generate_am_wave(carrier_freq, mod_freq, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    carrier = np.sin(2 * np.pi * carrier_freq * t)
-    modulator = 1 + 0.5 * np.sin(2 * np.pi * mod_freq * t)
+def am_wave(carrier_freq, mod_freq):
+    carrier = np.sin(2 * np.pi * carrier_freq * timestamps)
+    modulator = 1 + 0.5 * np.sin(2 * np.pi * mod_freq * timestamps)
     return 0.5 * carrier * modulator
 
-# Generieren und Speichern der WAV-Datei
-am_wave = generate_am_wave(440, 10, duration, sample_rate)
-save_wave_file("../am_wave.wav", am_wave, sample_rate)
+def fm_wave(carrier_freq, mod_freq, mod_index):
+    return 0.5 * np.sin(2 * np.pi * carrier_freq * timestamps + mod_index * np.sin(2 * np.pi * mod_freq * timestamps))
 
-
-def generate_fm_wave(carrier_freq, mod_freq, mod_index, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    return 0.5 * np.sin(2 * np.pi * carrier_freq * t + mod_index * np.sin(2 * np.pi * mod_freq * t))
-
-# Generieren und Speichern der WAV-Datei
-fm_wave = generate_fm_wave(440, 10, 5, duration, sample_rate)
-save_wave_file("../fm_wave.wav", fm_wave, sample_rate)
-
-
-
-def generate_polyphonic_wave(frequencies, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    signal = np.zeros_like(t)
-    for frequency in frequencies:
-        signal += 0.5 * np.sin(2 * np.pi * frequency * t)
-    return signal
-
-# Beispiel: Polyphones Signal mit 440 Hz, 880 Hz und 1320 Hz
-polyphonic_wave = generate_polyphonic_wave([440, 880, 1320], duration, sample_rate)
-save_wave_file("../polyphonic_wave.wav", polyphonic_wave, sample_rate)
-
-def generate_segmented_sine_wave(frequencies, segment_duration, sample_rate):
+def segmented_sine_wave(frequencies, segment_duration):
     signal = np.array([])
     for frequency in frequencies:
-        t = np.linspace(0, segment_duration, int(sample_rate * segment_duration), endpoint=False)
-        segment = 0.5 * np.sin(2 * np.pi * frequency * t)
+        timestamps = np.linspace(0, segment_duration, int(sample_rate * segment_duration), endpoint=False)
+        segment = 0.5 * np.sin(2 * np.pi * frequency * timestamps)
         signal = np.concatenate((signal, segment))
     return signal
 
-# Beispiel: Segmente mit 440 Hz, 880 Hz und 1320 Hz
-segmented_sine_wave = generate_segmented_sine_wave([440, 880, 1320], duration / 3, sample_rate)
-save_wave_file("../segmented_sine_wave.wav", segmented_sine_wave, sample_rate)
-
-def generate_sine_wave_with_envelope(frequency, duration, sample_rate, envelope):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    sine_wave = 0.5 * np.sin(2 * np.pi * frequency * t)
+def sine_wave_with_envelope(frequency):
+    envelope = np.linspace(0, 1, int(sample_rate * duration))
+    sine_wave = 0.5 * np.sin(2 * np.pi * frequency * timestamps)
     return sine_wave * envelope
 
-# Beispiel: Sinuswelle mit 440 Hz und einer linearen Hüllkurve
-envelope = np.linspace(0, 1, int(sample_rate * duration))
-sine_wave_with_envelope = generate_sine_wave_with_envelope(440, duration, sample_rate, envelope)
-save_wave_file("../sine_wave_with_envelope.wav", sine_wave_with_envelope, sample_rate)
 
-def generate_additive_synthesis_wave(fundamental_freq, num_harmonics, duration, sample_rate):
-    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-    signal = np.zeros_like(t)
+def additive_synthesis_wave(fundamental_freq, num_harmonics):
+    signal = np.zeros_like(timestamps)
     for i in range(1, num_harmonics + 1):
-        signal += (0.5 / i) * np.sin(2 * np.pi * fundamental_freq * i * t)
+        signal += (0.5 / i) * np.sin(2 * np.pi * fundamental_freq * i * timestamps)
     return signal
 
-# Beispiel: Additive Synthese mit Grundfrequenz 440 Hz und 5 Harmonischen
-additive_wave = generate_additive_synthesis_wave(440, 5, duration, sample_rate)
-save_wave_file("../additive_wave.wav", additive_wave, sample_rate)
+
+def get_all_arguments():
+    filename = str(sys.argv[1])
+    funcIndex = int(sys.argv[2])
+    duration = int(sys.argv[3])
+    sample_rate = int(sys.argv[4])
+
+    if funcIndex < 0 or funcIndex > 9:
+        print("Wrong argument for the generator function!")
+        sys.exit()
+
+    frequencies = [int(sys.argv[i]) for i in range(5, len(sys.argv))]
+
+    return filename, funcIndex, duration, sample_rate, frequencies
 
 
-print("WAV-Dateien wurden generiert und gespeichert.")
+def generate_data(func_index, frequencies):
+    data = None
+
+    if func_index == 0:
+        data = sine_wave(frequency=frequencies[0])
+    elif func_index == 1:
+        data = polyphonic_wave(frequencies=frequencies)
+    elif func_index == 2:
+        data = chirp_wave(start_freq=frequencies[0], end_freq=frequencies[1])
+    elif func_index == 3:
+        data = noise()
+    elif func_index == 4:
+        data = am_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1])
+    elif func_index == 5:
+        data = fm_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1], mod_index=frequencies[2])
+    elif func_index == 6:
+        data = segmented_sine_wave(frequencies=frequencies[:-1], segment_duration=frequencies[-1])
+    elif func_index == 7:
+        data = sine_wave_with_envelope(frequency=frequencies[0])
+    elif func_index == 8:
+        data = additive_synthesis_wave(fundamental_freq=frequencies[0], num_harmonics=frequencies[1])
+
+    return data
+
+
+
+def save_wave_file(filename, data):
+    # 32767 ist die maximale Amplitude, die eine 16-Bit-Audio-Sample haben kann
+    scaled = np.int16(data / np.max(np.abs(data)) * 32767)
+    write(filename, sample_rate, scaled)
+
+
+#TODO: Eventuell doch noch das Vierecks- und Dreieckssignal hinzufügen, da diese oft in der Vorlesung dran kamem
+def main():
+    global sample_rate, duration
+    filename, func_index, duration, sample_rate, frequencies = get_all_arguments()
+
+    # This is the default array for the timestamps
+    global timestamps
+    timestamps = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+
+    data = generate_data(func_index, frequencies)
+    save_wave_file(filename, data)
+
+    print("WAV-Dateien wurden generiert und gespeichert.")
+
+
+if __name__ == '__main__':
+    main()
