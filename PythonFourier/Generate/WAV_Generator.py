@@ -72,8 +72,8 @@ def get_all_arguments():
     duration = int(sys.argv[3])
     sample_rate = int(sys.argv[4])
 
-    if funcIndex < 0 or funcIndex > 9:
-        print("Wrong argument for the generator function!")
+    if funcIndex < 0 or funcIndex > 10:
+        print("func_index ist ausserhalb des gueltigen Bereiches!")
         sys.exit()
 
     frequencies = [int(sys.argv[i]) for i in range(5, len(sys.argv))]
@@ -120,14 +120,14 @@ def main():
     global sample_rate, duration
     filename, func_index, duration, sample_rate, frequencies = get_all_arguments()
 
-    # This is the default array for the timestamps
+    # Das sind die default Zeitstempel
     global timestamps
     timestamps = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
 
     data = generate_data(func_index, frequencies)
     save_wave_file(filename, data)
 
-    print("WAV-File was generated and saved.")
+    print("WAV-Dateie wurde generiert und gespeichert.")
 
 
 if __name__ == '__main__':

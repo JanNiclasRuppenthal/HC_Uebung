@@ -191,5 +191,6 @@ replay_pid*
 
 
 # More ignoring files
+*.wav
 *.txt
 !README.txt

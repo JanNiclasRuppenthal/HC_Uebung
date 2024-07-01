@@ -10,9 +10,9 @@ def get_all_arguments():
     file_path = str(sys.argv[1])
     block_size = int(sys.argv[2])
 
-    if (block_size < 64):
+    if block_size < 64:
         block_size = 64
-    elif (block_size > 512):
+    elif block_size > 512:
         block_size = 512
 
     shift_size = int(sys.argv[3])
@@ -86,7 +86,7 @@ def main():
 
     aggregated_fft = analyze(wav_data, block_size, shift_size)
 
-    write_data_to_file([sample_rate, block_size], 'sample_rate_and_block_size.txt')
+    write_data_to_file([sample_rate, block_size, threshold], 'sample_rate_and_block_size_threshold.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
 
     result = [(index * sample_rate / block_size, aggregated_fft[index]) for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]

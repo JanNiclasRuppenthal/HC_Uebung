@@ -14,11 +14,12 @@ def plot_data(data01, data02, color, linestyle, yLabel, title):
     plt.grid(True)
     plt.show()
 
-def plot_data_together(data01_x, data01_y, data02_x, data02_y, color01, color02, linestyle01, linestyle02, yLabel, title):
+def plot_data_together(data01_x, data01_y, data02_x, data02_y, data03_x, data03_y, yLabel, title):
     plt.figure(figsize=(10, 6))
 
-    plt.plot(data01_x, data01_y, color=color01, marker='.', linestyle=linestyle01)
-    plt.plot(data02_x, data02_y, color=color02, marker='.', linestyle=linestyle02)
+    plt.plot(data01_x, data01_y, color='blue', marker='.', linestyle='-')
+    plt.plot(data02_x, data02_y, color='red', marker='.', linestyle='')
+    plt.plot(data03_x, data03_y, color='green', marker='.', linestyle='-')
 
     plt.xlabel('Frequenz (Hz)')
     plt.ylabel(yLabel)
@@ -45,17 +46,17 @@ def get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size)
 
 
 def main():
-    other_data = read_data_as_np_array('sample_rate_and_block_size.txt')
+    other_data = read_data_as_np_array('sample_rate_and_block_size_threshold.txt')
     aggregated_fft = read_data_as_np_array('aggregated_fft.txt')
 
-    sample_rate, block_size = other_data[0], other_data[1]
+    sample_rate, block_size, threshold = other_data[0], other_data[1], other_data[2]
 
     main_frequencies, peaks = get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size)
 
     # Berechne die Frequenzachse
     frequency_axis = [index * sample_rate / block_size for index in range(len(aggregated_fft))]
 
-    # Plot des Spektrogramms
+    # Plot
     plot_data(frequency_axis, aggregated_fft, 'blue', '-', 'Amplitude', 'Spektrogramm')
     plot_data([frequency_axis[peak] for peak in peaks], aggregated_fft[peaks], 'red', '', 'Amplitude', 'Hauptfrequenzen und ihre Amplitude')
 
@@ -65,12 +66,10 @@ def main():
         aggregated_fft,
         [frequency_axis[peak] for peak in peaks],
         aggregated_fft[peaks],
-        'blue',
-        'red',
-        '-',
-        '',
+        frequency_axis,
+        [threshold] * len(frequency_axis),
         'Amplitude',
-        'Spektrogramm mit Markierung der Hauptfrequenzen'
+        'Hauptfrequenzen'
     )
 
 
