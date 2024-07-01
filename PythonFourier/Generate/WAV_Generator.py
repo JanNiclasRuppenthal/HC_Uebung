@@ -16,14 +16,6 @@ def polyphonic_wave(frequencies):
     return signal
 
 
-def chirp_wave(start_freq, end_freq):
-    return 0.5 * np.sin(2 * np.pi * (start_freq + (end_freq - start_freq) * timestamps / duration) * timestamps)
-
-
-def noise():
-    return 0.5 * np.random.normal(0, 1, int(sample_rate * duration))
-
-
 def am_wave(carrier_freq, mod_freq):
     carrier = np.sin(2 * np.pi * carrier_freq * timestamps)
     modulator = 1 + 0.5 * np.sin(2 * np.pi * mod_freq * timestamps)
@@ -66,17 +58,27 @@ def square_wave(frequency):
     return 0.5 * np.sign(np.sin(2 * np.pi * frequency * timestamps))
 
 
+#Nicht fuer FFT geeignet
+def chirp_wave(start_freq, end_freq):
+    return 0.5 * np.sin(2 * np.pi * (start_freq + (end_freq - start_freq) * timestamps / duration) * timestamps)
+
+
+#Nicht fuer FFT geeignet
+def noise():
+    return 0.5 * np.random.normal(0, 1, int(sample_rate * duration))
+
+
 def get_all_arguments():
     filename = str(sys.argv[1])
     funcIndex = int(sys.argv[2])
-    duration = int(sys.argv[3])
+    duration = float(sys.argv[3])
     sample_rate = int(sys.argv[4])
 
     if funcIndex < 0 or funcIndex > 10:
         print("func_index ist ausserhalb des gueltigen Bereiches!")
         sys.exit()
 
-    frequencies = [int(sys.argv[i]) for i in range(5, len(sys.argv))]
+    frequencies = [float(sys.argv[i]) for i in range(5, len(sys.argv))]
 
     return filename, funcIndex, duration, sample_rate, frequencies
 
@@ -89,23 +91,23 @@ def generate_data(func_index, frequencies):
     elif func_index == 1:
         data = polyphonic_wave(frequencies=frequencies)
     elif func_index == 2:
-        data = chirp_wave(start_freq=frequencies[0], end_freq=frequencies[1])
-    elif func_index == 3:
-        data = noise()
-    elif func_index == 4:
         data = am_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1])
-    elif func_index == 5:
+    elif func_index == 3:
         data = fm_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1], mod_index=frequencies[2])
-    elif func_index == 6:
+    elif func_index == 4:
         data = segmented_sine_wave(frequencies=frequencies[:-1], segment_duration=frequencies[-1])
-    elif func_index == 7:
+    elif func_index == 5:
         data = sine_wave_with_envelope(frequency=frequencies[0])
-    elif func_index == 8:
-        data = additive_synthesis_wave(fundamental_freq=frequencies[0], num_harmonics=frequencies[1])
-    elif func_index == 9:
+    elif func_index == 6:
+        data = additive_synthesis_wave(fundamental_freq=frequencies[0], num_harmonics=int(frequencies[1]))
+    elif func_index == 7:
         data = triangle_wave(frequency=frequencies[0])
-    elif func_index == 10:
+    elif func_index == 8:
         data = square_wave(frequency=frequencies[0])
+    elif func_index == 9:
+        data = chirp_wave(start_freq=frequencies[0], end_freq=frequencies[1])
+    elif func_index == 10:
+        data = noise()
 
     return data
 
@@ -127,7 +129,7 @@ def main():
     data = generate_data(func_index, frequencies)
     save_wave_file(filename, data)
 
-    print("WAV-Dateie wurde generiert und gespeichert.")
+    print("WAV-Datei wurde generiert und gespeichert.")
 
 
 if __name__ == '__main__':
