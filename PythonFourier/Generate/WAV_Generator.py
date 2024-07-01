@@ -48,6 +48,14 @@ def additive_synthesis_wave(fundamental_freq, num_harmonics):
         signal += (0.5 / i) * np.sin(2 * np.pi * fundamental_freq * i * timestamps)
     return signal
 
+def triangle_wave(frequency):
+    period = 1 / frequency
+    t_normalized = (timestamps % period) / period
+    return 0.5 * (2 * np.abs(2 * t_normalized - 1) - 1)
+
+def square_wave(frequency):
+    return 0.5 * np.sign(np.sin(2 * np.pi * frequency * timestamps))
+
 
 def get_all_arguments():
     filename = str(sys.argv[1])
@@ -85,6 +93,10 @@ def generate_data(func_index, frequencies):
         data = sine_wave_with_envelope(frequency=frequencies[0])
     elif func_index == 8:
         data = additive_synthesis_wave(fundamental_freq=frequencies[0], num_harmonics=frequencies[1])
+    elif func_index == 9:
+        data = triangle_wave(frequency=frequencies[0])
+    elif func_index == 10:
+        data = square_wave(frequency=frequencies[0])
 
     return data
 
@@ -96,7 +108,6 @@ def save_wave_file(filename, data):
     write(filename, sample_rate, scaled)
 
 
-#TODO: Eventuell doch noch das Vierecks- und Dreieckssignal hinzufügen, da diese oft in der Vorlesung dran kamem
 def main():
     global sample_rate, duration
     filename, func_index, duration, sample_rate, frequencies = get_all_arguments()
@@ -108,7 +119,7 @@ def main():
     data = generate_data(func_index, frequencies)
     save_wave_file(filename, data)
 
-    print("WAV-Dateien wurden generiert und gespeichert.")
+    print("WAV-File was generated and saved.")
 
 
 if __name__ == '__main__':
