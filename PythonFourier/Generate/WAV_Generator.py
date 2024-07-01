@@ -4,8 +4,10 @@ from scipy.io.wavfile import write
 
 global duration, sample_rate, timestamps
 
+
 def sine_wave(frequency):
     return 0.5 * np.sin(2 * np.pi * frequency * timestamps)
+
 
 def polyphonic_wave(frequencies):
     signal = np.zeros_like(timestamps)
@@ -13,19 +15,24 @@ def polyphonic_wave(frequencies):
         signal += 0.5 * np.sin(2 * np.pi * frequency * timestamps)
     return signal
 
+
 def chirp_wave(start_freq, end_freq):
     return 0.5 * np.sin(2 * np.pi * (start_freq + (end_freq - start_freq) * timestamps / duration) * timestamps)
 
+
 def noise():
     return 0.5 * np.random.normal(0, 1, int(sample_rate * duration))
+
 
 def am_wave(carrier_freq, mod_freq):
     carrier = np.sin(2 * np.pi * carrier_freq * timestamps)
     modulator = 1 + 0.5 * np.sin(2 * np.pi * mod_freq * timestamps)
     return 0.5 * carrier * modulator
 
+
 def fm_wave(carrier_freq, mod_freq, mod_index):
     return 0.5 * np.sin(2 * np.pi * carrier_freq * timestamps + mod_index * np.sin(2 * np.pi * mod_freq * timestamps))
+
 
 def segmented_sine_wave(frequencies, segment_duration):
     signal = np.array([])
@@ -34,6 +41,7 @@ def segmented_sine_wave(frequencies, segment_duration):
         segment = 0.5 * np.sin(2 * np.pi * frequency * timestamps)
         signal = np.concatenate((signal, segment))
     return signal
+
 
 def sine_wave_with_envelope(frequency):
     envelope = np.linspace(0, 1, int(sample_rate * duration))
@@ -47,10 +55,12 @@ def additive_synthesis_wave(fundamental_freq, num_harmonics):
         signal += (0.5 / i) * np.sin(2 * np.pi * fundamental_freq * i * timestamps)
     return signal
 
+
 def triangle_wave(frequency):
     period = 1 / frequency
     t_normalized = (timestamps % period) / period
     return 0.5 * (2 * np.abs(2 * t_normalized - 1) - 1)
+
 
 def square_wave(frequency):
     return 0.5 * np.sign(np.sin(2 * np.pi * frequency * timestamps))
@@ -98,7 +108,6 @@ def generate_data(func_index, frequencies):
         data = square_wave(frequency=frequencies[0])
 
     return data
-
 
 
 def save_wave_file(filename, data):
