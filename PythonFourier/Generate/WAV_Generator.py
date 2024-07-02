@@ -58,55 +58,57 @@ def square_wave(frequency):
     return 0.5 * np.sign(np.sin(2 * np.pi * frequency * timestamps))
 
 
-#Nicht fuer FFT geeignet
 def chirp_wave(start_freq, end_freq):
     return 0.5 * np.sin(2 * np.pi * (start_freq + (end_freq - start_freq) * timestamps / duration) * timestamps)
 
 
-#Nicht fuer FFT geeignet
 def noise():
     return 0.5 * np.random.normal(0, 1, int(sample_rate * duration))
 
 
+functions = ["sine", "polyphonic", "am", "fm", "segmented", "envelope", "add_synthesis", "triangle", "square",
+             "chirp_wave", "noise"]
+
+
 def get_all_arguments():
     filename = str(sys.argv[1])
-    funcIndex = int(sys.argv[2])
+    func_name = str(sys.argv[2])
     duration = float(sys.argv[3])
     sample_rate = int(sys.argv[4])
 
-    if funcIndex < 0 or funcIndex > 10:
-        print("func_index ist ausserhalb des gueltigen Bereiches!")
+    if func_name not in functions:
+        print("Diese Funktion %s existiert nicht!" % func_name)
         sys.exit()
 
     frequencies = [float(sys.argv[i]) for i in range(5, len(sys.argv))]
 
-    return filename, funcIndex, duration, sample_rate, frequencies
+    return filename, func_name, duration, sample_rate, frequencies
 
 
-def generate_data(func_index, frequencies):
+def generate_data(func_name, frequencies):
     data = None
 
-    if func_index == 0:
+    if func_name == "sine":
         data = sine_wave(frequency=frequencies[0])
-    elif func_index == 1:
+    elif func_name == "polyphonic":
         data = polyphonic_wave(frequencies=frequencies)
-    elif func_index == 2:
+    elif func_name == "am":
         data = am_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1])
-    elif func_index == 3:
+    elif func_name == "fm":
         data = fm_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1], mod_index=frequencies[2])
-    elif func_index == 4:
+    elif func_name == "segmented":
         data = segmented_sine_wave(frequencies=frequencies[:-1], segment_duration=frequencies[-1])
-    elif func_index == 5:
+    elif func_name == "envelope":
         data = sine_wave_with_envelope(frequency=frequencies[0])
-    elif func_index == 6:
+    elif func_name == "add_synthesis":
         data = additive_synthesis_wave(fundamental_freq=frequencies[0], num_harmonics=int(frequencies[1]))
-    elif func_index == 7:
+    elif func_name == "triangle":
         data = triangle_wave(frequency=frequencies[0])
-    elif func_index == 8:
+    elif func_name == "square":
         data = square_wave(frequency=frequencies[0])
-    elif func_index == 9:
+    elif func_name == "chirp":
         data = chirp_wave(start_freq=frequencies[0], end_freq=frequencies[1])
-    elif func_index == 10:
+    elif func_name == "noise":
         data = noise()
 
     return data
@@ -120,13 +122,13 @@ def save_wave_file(filename, data):
 
 def main():
     global sample_rate, duration
-    filename, func_index, duration, sample_rate, frequencies = get_all_arguments()
+    filename, func_name, duration, sample_rate, frequencies = get_all_arguments()
 
     # Das sind die default Zeitstempel
     global timestamps
     timestamps = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
 
-    data = generate_data(func_index, frequencies)
+    data = generate_data(func_name, frequencies)
     save_wave_file(filename, data)
 
     print("WAV-Datei wurde generiert und gespeichert.")
