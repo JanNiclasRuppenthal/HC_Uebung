@@ -1,29 +1,83 @@
-Bevor das Skript main.py gestartet werden kann, muss man zuerst alle Bibliotheken herunterladen. Hierfuer kann man den folgenden Befehl verwenden:
+Bevor man ueberhaupt ein Python-Skript starten kann, muss man zuerst alle Bibliotheken installieren. Hierfuer kann man den folgenden Befehl verwenden:
 pip install -r requirements.txt
 
-Danach werden alle verwendeten Bibliotheken installiert. Ich hoffe, dass dies reibungslos funktioniert, da ich auf dem altem Raspberry Pi Probleme wegen der Installation hatte. Aber auf Linux Mint funktionierte die Installation reibungslos.
 
 
-Um nun das Skript fuer die Fourieranalyse zu starten, muss man den folgenden Befehl verwenden:
-python main.py ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
+Aufgabe 01:
+Um nun das Skript fuer die sequentielle Fourieranalyse in (FFT\fft_seq.py) zu starten, muss man den folgenden Befehl verwenden:
+python FFT\fft_seq.py <Pfad zur WAV-Datei> <Blockgroesse> <Versatz> <Schwellwert>
 
 oder 
 
-python3 main.py ..\resources\<Name der WAV-Datei> <Blockgroesse> <Funktion>
+python3 FFT\fft_seq.py <Pfad zur WAV-Datei> <Blockgroesse> <Versatz> <Schwellwert>
 
 
-Hierbei gibt es verschiedene Varianten, die man fuer den Parameter Funktion verwenden kann:
-    - dft
-    - rec_fft
-    - vec_fft
-    - np_fft
-
-Man kann aber auch den Parameter Funktion weglassen. Dann wird die von numpy implementierte FFT verwendet.
+Hierbei gibt es verschiedene Varianten, die man fuer die letzten drei Parameter verwenden kann:
+    - Blockgroesse ist ein Integer, der zwischen 64 und 512 eingeschraenkt wird.
+    - Versatz ist ein Integer, der zwischen 1 und Blockgroesse eingeschraenkt wird.
+    - Schwellwert ist eine positive Fliesskommazahl
 
 
 
+Aufgabe 02:
+Um nun das Skript fuer die sequentielle Fourieranalyse in (Generate\WAV_Generator.py) zu starten, muss man den folgenden Befehl verwenden:
+python Generate\WAV_Generator.py <Pfad zur WAV-Datei> <Blockgroesse> <Versatz> <Schwellwert>
+
+oder 
+
+python3 Generate\WAV_Generator.py <Pfad zur WAV-Datei> <Blockgroesse> <Versatz> <Schwellwert>
+
+
+Fuer den Parameter Funktionsname gibt es verschiedene Optionen, die man auswaehlen kann:
+    - sine 
+    - polyphonic
+    - am
+    - fm 
+    - segmented 
+    - envelope
+    - add_synthesis
+    - triangle
+    - square 
+    - chirp
+    - noise
+
+Jede der Funktionen benoetigt auch noch verschiedene Parameter, die man in <Sonstige Parameter> festlegen kann:
+    - sine benoetigt genau eine Frequenz
+    - polyphonic benoetigt eine Folge von Frequenzen
+    - am benoetigt genau zwei Frequenzen
+    - fm benoetigt auch zwei Frequenzen und einen Index
+    - segmented braucht eine Folge von Frequenzen und eine Dauer fuer die Segmente 
+    - envelope muss man nur eine Frequenz uebergeben
+    - add_synthesis benoetigt eine Hauptfrequenz und eine natuerliche Zahl fuer die Harmonischen
+    - triangle benoetigt nur eine Frequenz
+    - square benoetigt auch nur eine Frequenz 
+    - chirp braucht wieder eine Frequenz 
+    - noise muss man zwei Frequenzen uebergeben
+
+
+Beispiele der Befehle, die auch fuer den Ergebnisbericht verwendet wurden:
+
+
+
+
+Aufgabe 03:
+Um nun das Skript fuer die parallele Fourieranalyse in (FFT\fft_par.py) auf der CPU zu starten, muss man den folgenden Befehl verwenden:
+python FFT\fft_par.py <Dateiname> <Funktionsname> <Dauer in Sekunden> <Abtastrate> <Sonstige Parameter>
+
+oder 
+
+python3 FFT\fft_par.py <Dateiname> <Funktionsname> <Dauer in Sekunden> <Abtastrate> <Sonstige Parameter>
+
+
+Die Parameter wurden schon bei der ersten Aufgabe beschrieben.
+
+
+
+Aufgabe 04:
+TODO
+
+
+
+Sonstige Dateien:
 Die Datei plotting.py erstellt Diagramme zu den Hauptfrequenzen, die in verschiedene TXT-Dateien geschrieben werden. Dazu muss man zuerst eine Fourieranalyse durchgefuehrt haben. Die Datei kann folgendermassen gestartet werden:
-python plotting.py oder python3 plotting.py 
-
-Die letzte Datei plotting_memory.py erstellt Diagramme zum gemessenem Speicherbedarf. Die Diagramme koennen auch nur nach einer Fourieranalyse generiert werden. Mit dem folgendem Befehl kann das Skript gestartet werden:
-python plotting_memory.py oder python3 plotting_memory.py 
+python Plot_Data\plotting.py oder python3 Plot_Data\plotting.py 

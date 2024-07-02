@@ -21,7 +21,10 @@ def get_all_arguments():
     elif (shift_size > block_size):
         shift_size = block_size
 
-    threshold = int(sys.argv[4])
+    threshold = float(sys.argv[4])
+
+    if threshold < 0:
+        threshold = 0
 
     return file_path, block_size, shift_size, threshold
 
@@ -89,12 +92,14 @@ def main():
     write_data_to_file([sample_rate, block_size, threshold], 'sample_rate_and_block_size_threshold.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
 
+    run_time = time.time() - start_time
+    print_run_time(run_time)
+
+
+    #TODO: Die Ergebnisse der FFT koennte ich noch in eine Datei schreiben
     result = [(index * sample_rate / block_size, aggregated_fft[index]) for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
 
     print(result)
-
-    run_time = time.time() - start_time
-    print_run_time(run_time)
 
 
 if __name__ == "__main__":
