@@ -30,27 +30,27 @@ python3 Generate\WAV_Generator.py <Pfad zur WAV-Datei> <Blockgroesse> <Versatz> 
 
 Fuer den Parameter Funktionsname gibt es verschiedene Optionen, die man auswaehlen kann:
     - sine 
-    - polyphonic
+    - add
     - am
     - fm 
     - segmented 
     - envelope
-    - add_synthesis
+    - harmonics
     - triangle
-    - square 
+    - rectangle 
     - chirp
     - noise
 
 Jede der Funktionen benoetigt auch noch verschiedene Parameter, die man in <Sonstige Parameter> festlegen kann:
     - sine benoetigt genau eine Frequenz
-    - polyphonic benoetigt eine Folge von Frequenzen
+    - add benoetigt eine Folge von Frequenzen
     - am benoetigt genau zwei Frequenzen
     - fm benoetigt auch zwei Frequenzen und einen Index
     - segmented braucht eine Folge von Frequenzen und eine Dauer fuer die Segmente 
     - envelope muss man nur eine Frequenz uebergeben
-    - add_synthesis benoetigt eine Hauptfrequenz und eine natuerliche Zahl fuer die Harmonischen
+    - harmonics benoetigt eine Hauptfrequenz und eine natuerliche Zahl fuer die Harmonischen
     - triangle benoetigt nur eine Frequenz
-    - square benoetigt auch nur eine Frequenz 
+    - rectangle benoetigt auch nur eine Frequenz 
     - chirp braucht wieder eine Frequenz 
     - noise muss man zwei Frequenzen uebergeben
 

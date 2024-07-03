@@ -1,8 +1,6 @@
 import sys
 import time
-
 import numpy as np
-
 from scipy.io import wavfile
 
 
@@ -16,9 +14,9 @@ def get_all_arguments():
         block_size = 512
 
     shift_size = int(sys.argv[3])
-    if (shift_size < 1):
+    if shift_size < 1:
         shift_size = 1
-    elif (shift_size > block_size):
+    elif shift_size > block_size:
         shift_size = block_size
 
     threshold = float(sys.argv[4])
@@ -89,7 +87,7 @@ def main():
 
     aggregated_fft = analyze(wav_data, block_size, shift_size)
 
-    write_data_to_file([sample_rate, block_size, threshold], 'sample_rate_and_block_size_threshold.txt')
+    write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
 
     run_time = time.time() - start_time
@@ -97,7 +95,9 @@ def main():
 
 
     #TODO: Die Ergebnisse der FFT koennte ich noch in eine Datei schreiben
-    result = [(index * sample_rate / block_size, aggregated_fft[index]) for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
+    #TODO: Refactoring
+    result = [(index * sample_rate / block_size, aggregated_fft[index])
+              for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
 
     print(result)
 

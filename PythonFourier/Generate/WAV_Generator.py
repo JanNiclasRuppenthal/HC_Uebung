@@ -9,7 +9,7 @@ def sine_wave(frequency):
     return 0.5 * np.sin(2 * np.pi * frequency * timestamps)
 
 
-def polyphonic_wave(frequencies):
+def add_sine_wave(frequencies):
     signal = np.zeros_like(timestamps)
     for frequency in frequencies:
         signal += 0.5 * np.sin(2 * np.pi * frequency * timestamps)
@@ -40,8 +40,7 @@ def sine_wave_with_envelope(frequency):
     sine_wave = 0.5 * np.sin(2 * np.pi * frequency * timestamps)
     return sine_wave * envelope
 
-
-def additive_synthesis_wave(fundamental_freq, num_harmonics):
+def harmonics_wave(fundamental_freq, num_harmonics):
     signal = np.zeros_like(timestamps)
     for i in range(1, num_harmonics + 1):
         signal += (0.5 / i) * np.sin(2 * np.pi * fundamental_freq * i * timestamps)
@@ -54,7 +53,7 @@ def triangle_wave(frequency):
     return 0.5 * (2 * np.abs(2 * t_normalized - 1) - 1)
 
 
-def square_wave(frequency):
+def rectangle_wave(frequency):
     return 0.5 * np.sign(np.sin(2 * np.pi * frequency * timestamps))
 
 
@@ -90,8 +89,8 @@ def generate_data(func_name, frequencies):
 
     if func_name == "sine":
         data = sine_wave(frequency=frequencies[0])
-    elif func_name == "polyphonic":
-        data = polyphonic_wave(frequencies=frequencies)
+    elif func_name == "add":
+        data = add_sine_wave(frequencies=frequencies)
     elif func_name == "am":
         data = am_wave(carrier_freq=frequencies[0], mod_freq=frequencies[1])
     elif func_name == "fm":
@@ -100,12 +99,12 @@ def generate_data(func_name, frequencies):
         data = segmented_sine_wave(frequencies=frequencies[:-1], segment_duration=frequencies[-1])
     elif func_name == "envelope":
         data = sine_wave_with_envelope(frequency=frequencies[0])
-    elif func_name == "add_synthesis":
-        data = additive_synthesis_wave(fundamental_freq=frequencies[0], num_harmonics=int(frequencies[1]))
+    elif func_name == "harmonics":
+        data = harmonics_wave(fundamental_freq=frequencies[0], num_harmonics=int(frequencies[1]))
     elif func_name == "triangle":
         data = triangle_wave(frequency=frequencies[0])
-    elif func_name == "square":
-        data = square_wave(frequency=frequencies[0])
+    elif func_name == "rectangle":
+        data = rectangle_wave(frequency=frequencies[0])
     elif func_name == "chirp":
         data = chirp_wave(start_freq=frequencies[0], end_freq=frequencies[1])
     elif func_name == "noise":
