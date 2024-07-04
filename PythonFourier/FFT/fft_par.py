@@ -5,6 +5,9 @@ import numpy as np
 
 from scipy.io import wavfile
 
+# Neu fuer Aufgabe 03
+import os
+import threading
 
 def get_all_arguments():
     file_path = str(sys.argv[1])
@@ -16,9 +19,9 @@ def get_all_arguments():
         block_size = 512
 
     shift_size = int(sys.argv[3])
-    if (shift_size < 1):
+    if shift_size < 1:
         shift_size = 1
-    elif (shift_size > block_size):
+    elif shift_size > block_size:
         shift_size = block_size
 
     threshold = int(sys.argv[4])
@@ -39,32 +42,54 @@ def analyze_wav_file(file_path):
     return data, sample_rate
 
 
+
+def fft(id, lock, cpu_count, data, block_size, shift_size, num_blocks):
+    global aggregated_fft
+    for i in range(id*shift_size, num_blocks, cpu_count * shift_size):
+        block = data[i:i+block_size]
+        fft_result = np.fft.fft(block)
+
+        '''
+        Bei der Addition der Ergebnisse muss man darauf achten, dass man diese Operation synchronisiert, da es zu Fehler
+        kommen kann (z.B Race Conditions). Deswegen habe ich einen Lock verwendet, sodass die Threads nacheinander die 
+        Ergebniss addiert.
+        '''
+        lock.acquire()
+        aggregated_fft += np.abs(fft_result[:block_size//2])
+        lock.release()
+
+
 def analyze(data, block_size, shift_size):
+    '''
+    Setze die Variable aggregated_fft global, da sie von allen Threads genutzt werden muss. Damit koennen die Ergebnisse
+    zwischengespeichert werden.
+    '''
+    global aggregated_fft
     num_samples = len(data)
     num_blocks = num_samples - block_size + 1
 
     aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
-    #TODO: Fuer die dritte Aufgabe:
+    #Neu fuer die Augabe 03:
+
+    #Initialsiere weitere notwendige Variablen fuer die Parallelisierung
+    cpu_count = os.cpu_count()
+    lock = threading.Lock()
+    threads = []
+
     '''
-    Jeder Thread bekommt einen Daten-Block wie beim Striping aus der Vorlesung zu den Primzahlen.
-    Fuer den Mittelwert muss ich darauf achten, dass ich dies synchronisiere, damit keine Synchronisierungsprobleme entstehen!
+    Jeder Thread bekommt eine ID, damit man Striping auf den Datenblock verwenden kann.
     '''
+    for id in range(cpu_count):
+        thread = threading.Thread(target=fft, args=(id, lock, cpu_count, data, block_size, shift_size, num_blocks))
+        threads.append(thread)
+        thread.start()
 
-    # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
-    for i in range(0, num_blocks, shift_size):
-        block = data[i:i+block_size]
-        fft_result = np.fft.fft(block)
+    # Warte bis alle Threads ihre Arbeit beendet haben.
+    for thread in threads:
+        thread.join()
 
-        '''
-        Summiere alle Ergebnisse auf.
-        Wir verwenden den Absolutbetrag der Ergebnisse, da diese komplexe Zahlen sind.
-        Der Betrag einer komplexen Zahl ist die Entfernung der Zahl zum Nullpunkt im komplexen Raum.
-        '''
-        aggregated_fft += np.abs(fft_result[:block_size//2])
-
-    # Wir berechnen den Mittelwert, da die Summen sonst zu gross sind
-    aggregated_fft /= num_blocks
+    aggregated_fft = np.array(aggregated_fft) / num_blocks
 
     return aggregated_fft
 
@@ -92,7 +117,7 @@ def main():
 
     aggregated_fft = analyze(wav_data, block_size, shift_size)
 
-    write_data_to_file([sample_rate, block_size], 'sample_rate_and_block_size.txt')
+    write_data_to_file([sample_rate, block_size], 'sr_bs_t.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
 
     result = [(index * sample_rate / block_size, aggregated_fft[index]) for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
