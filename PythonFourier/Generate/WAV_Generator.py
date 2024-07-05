@@ -65,8 +65,8 @@ def noise():
     return 0.5 * np.random.normal(0, 1, int(sample_rate * duration))
 
 
-functions = ["sine", "polyphonic", "am", "fm", "segmented", "envelope", "add_synthesis", "triangle", "square",
-             "chirp_wave", "noise"]
+functions = ["sine", "add", "am", "fm", "segmented", "envelope", "harmonics", "triangle", "rectangle",
+             "chirp", "noise"]
 
 
 def get_all_arguments():

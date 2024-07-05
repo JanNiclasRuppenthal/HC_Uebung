@@ -42,12 +42,12 @@ def analyze_wav_file(file_path):
 
 def analyze(data, block_size, shift_size):
     num_samples = len(data)
-    num_blocks = num_samples - block_size + 1
+    num_blocks = (num_samples - block_size) // shift_size + 1
 
     aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
     # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
-    for i in range(0, num_blocks, shift_size):
+    for i in range(0, len(data) - block_size + 1, shift_size):
         block = data[i:i+block_size]
         fft_result = np.fft.fft(block)
 
@@ -87,11 +87,13 @@ def main():
 
     aggregated_fft = analyze(wav_data, block_size, shift_size)
 
-    write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
-    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
-
     run_time = time.time() - start_time
     print_run_time(run_time)
+
+    # Ab hier soll nicht mehr die Zeit gemessen werden, da ich nur die Zeit fuer eine Fourieranalyse haben moechte
+    write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
+    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
+    write_data_to_file(wav_data, 'wav_data.txt')
 
 
     #TODO: Die Ergebnisse der FFT koennte ich noch in eine Datei schreiben

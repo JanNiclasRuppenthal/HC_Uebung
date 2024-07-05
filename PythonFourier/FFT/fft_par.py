@@ -43,9 +43,9 @@ def analyze_wav_file(file_path):
 
 
 
-def fft(id, lock, cpu_count, data, block_size, shift_size, num_blocks):
+def fft_thread(id, lock, cpu_count, data, block_size, shift_size):
     global aggregated_fft
-    for i in range(id*shift_size, num_blocks, cpu_count * shift_size):
+    for i in range(id*shift_size, len(data) - block_size + 1, cpu_count * shift_size):
         block = data[i:i+block_size]
         fft_result = np.fft.fft(block)
 
@@ -66,8 +66,7 @@ def analyze(data, block_size, shift_size):
     '''
     global aggregated_fft
     num_samples = len(data)
-    num_blocks = num_samples - block_size + 1
-
+    num_blocks = (num_samples - block_size) // shift_size + 1
     aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
     #Neu fuer die Augabe 03:
@@ -81,7 +80,8 @@ def analyze(data, block_size, shift_size):
     Jeder Thread bekommt eine ID, damit man Striping auf den Datenblock verwenden kann.
     '''
     for id in range(cpu_count):
-        thread = threading.Thread(target=fft, args=(id, lock, cpu_count, data, block_size, shift_size, num_blocks))
+        thread = threading.Thread(target=fft_thread,
+                 args=(id, lock, cpu_count, data, block_size, shift_size))
         threads.append(thread)
         thread.start()
 
@@ -117,15 +117,17 @@ def main():
 
     aggregated_fft = analyze(wav_data, block_size, shift_size)
 
-    write_data_to_file([sample_rate, block_size], 'sr_bs_t.txt')
+    run_time = time.time() - start_time
+    print_run_time(run_time)
+
+    # Ab hier soll nicht mehr die Zeit gemessen werden, da ich nur die Zeit fuer eine Fourieranalyse haben moechte
+    write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
     write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
+    write_data_to_file(wav_data, 'wav_data.txt')
 
     result = [(index * sample_rate / block_size, aggregated_fft[index]) for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
 
     print(result)
-
-    run_time = time.time() - start_time
-    print_run_time(run_time)
 
 
 if __name__ == "__main__":

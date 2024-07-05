@@ -27,6 +27,18 @@ def plot_data_together(data01_x, data01_y, data02_x, data02_y, data03_x, data03_
     plt.grid(True)
     plt.show()
 
+def plot_spectrogram(data, sample_rate, block_size):
+    plt.figure(figsize=(10, 6))
+    plt.specgram(data, NFFT=int(block_size), Fs=sample_rate)
+
+    plt.xlabel('Zeit (s)')
+    plt.ylabel('Frequenz (Hz)')
+    plt.title('Spektrogramm')
+    plt.colorbar(label='dB')
+    plt.ylim(0, sample_rate / 2)
+    plt.show()
+
+
 
 '''
 Finde zuerst allen lokalen Maxima des Spektrogramms durch die Methode find_peaks aus scipy.signal.
@@ -48,6 +60,7 @@ def get_main_frequencies_with_amplitude(aggregated_fft, sample_rate, block_size)
 def main():
     other_data = read_data_as_np_array('sr_bs_t.txt')
     aggregated_fft = read_data_as_np_array('aggregated_fft.txt')
+    wav_data = read_data_as_np_array("wav_data.txt")
 
     sample_rate, block_size, threshold = other_data[0], other_data[1], other_data[2]
 
@@ -57,7 +70,7 @@ def main():
     frequency_axis = [index * sample_rate / block_size for index in range(len(aggregated_fft))]
 
     # Plot
-    plot_data(frequency_axis, aggregated_fft, 'blue', '-', 'Amplitude', 'Spektrogramm')
+    plot_data(frequency_axis, aggregated_fft, 'blue', '-', 'Amplitude', 'Frequenzspektrum')
     plot_data([frequency_axis[peak] for peak in peaks], aggregated_fft[peaks], 'red', '', 'Amplitude', 'Hauptfrequenzen und ihre Amplitude')
 
 
@@ -69,8 +82,10 @@ def main():
         frequency_axis,
         [threshold] * len(frequency_axis),
         'Amplitude',
-        'Hauptfrequenzen'
+        'Frequenzspektrum mit Hauptfrequenzen'
     )
+
+    plot_spectrogram(wav_data, sample_rate, block_size)
 
 
     for (freq, index) in [(main_frequencies[index], peaks[index]) for index in range(len(main_frequencies))]:
