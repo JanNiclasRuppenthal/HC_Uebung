@@ -41,55 +41,41 @@ def analyze_wav_file(file_path):
 
     return data, sample_rate
 
-
-
-def fft_thread(id, lock, cpu_count, data, block_size, shift_size):
-    global aggregated_fft
-    for i in range(id*shift_size, len(data) - block_size + 1, cpu_count * shift_size):
+def fft_thread(id, lock, cpu_count, data, block_size, shift_size, aggregated_fft):
+    local_fft = np.zeros(block_size//2)
+    for i in range(id * shift_size, len(data) - block_size + 1, cpu_count * shift_size):
         block = data[i:i+block_size]
         fft_result = np.fft.fft(block)
+        local_fft += np.abs(fft_result[:block_size//2])
 
-        '''
-        Bei der Addition der Ergebnisse muss man darauf achten, dass man diese Operation synchronisiert, da es zu Fehler
-        kommen kann (z.B Race Conditions). Deswegen habe ich einen Lock verwendet, sodass die Threads nacheinander die 
-        Ergebniss addiert.
-        '''
-        lock.acquire()
-        aggregated_fft += np.abs(fft_result[:block_size//2])
-        lock.release()
+    '''
+    Bei der Addition der Ergebnisse muss man darauf achten, dass man diese Operation synchronisiert, da es zu Fehler
+    kommen kann (z.B Race Conditions). Deswegen habe ich einen Lock verwendet, sodass die Threads nacheinander die 
+    Ergebniss addiert.
+    '''
+    lock.acquire()
+    aggregated_fft += local_fft
+    lock.release()
 
 
 def analyze(data, block_size, shift_size):
-    '''
-    Setze die Variable aggregated_fft global, da sie von allen Threads genutzt werden muss. Damit koennen die Ergebnisse
-    zwischengespeichert werden.
-    '''
-    global aggregated_fft
     num_samples = len(data)
     num_blocks = (num_samples - block_size) // shift_size + 1
-    aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
 
-    #Neu fuer die Augabe 03:
-
-    #Initialsiere weitere notwendige Variablen fuer die Parallelisierung
     cpu_count = os.cpu_count()
-    lock = threading.Lock()
     threads = []
+    lock = threading.Lock()
+    aggregated_fft = np.zeros(block_size//2)
 
-    '''
-    Jeder Thread bekommt eine ID, damit man Striping auf den Datenblock verwenden kann.
-    '''
     for id in range(cpu_count):
-        thread = threading.Thread(target=fft_thread,
-                 args=(id, lock, cpu_count, data, block_size, shift_size))
+        thread = threading.Thread(target=fft_thread, args=(id, lock, cpu_count, data, block_size, shift_size, aggregated_fft))
         threads.append(thread)
         thread.start()
 
-    # Warte bis alle Threads ihre Arbeit beendet haben.
     for thread in threads:
         thread.join()
 
-    aggregated_fft = np.array(aggregated_fft) / num_blocks
+    aggregated_fft /= num_blocks
 
     return aggregated_fft
 
