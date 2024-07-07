@@ -1,6 +1,5 @@
 import numpy as np
 import pyopencl as cl
-import matplotlib.pyplot as plt
 import argparse
 from scipy.io import wavfile
 
@@ -11,20 +10,18 @@ def read_wav_file(file_path):
     return data, sample_rate
 
 def perform_dft(data, block_size, shift_size, threshold):
-    platforms = cl.get_platforms()
-    devices = platforms[0].get_devices(cl.device_type.GPU)
-    units_count = devices[0].max_compute_units
-
     context = cl.create_some_context()
     queue = cl.CommandQueue(context)
 
     mf = cl.mem_flags
     data = data.astype(np.float32)
     num_blocks = (len(data) - block_size) // shift_size + 1
+    data_length = np.int32(len(data))  # Länge des Daten-Arrays
+
     dft_result = np.zeros((num_blocks, block_size // 2), dtype=np.complex64)
 
     program_source = """
-    __kernel void dft_kernel(__global const float *data, __global float2 *result, int count_units, int block_size, int shift_size, int num_blocks) {
+    __kernel void dft_kernel(__global const float *data, __global float2 *result, int data_length, int block_size, int shift_size) {
         int gid = get_global_id(0);
         int block_start = gid * shift_size;
         if (block_start + block_size > data_length) return;
@@ -47,24 +44,14 @@ def perform_dft(data, block_size, shift_size, threshold):
     result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
 
     dft_kernel = program.dft_kernel
-    dft_kernel.set_args(data_buffer, result_buffer, np.int32(units_count), np.int32(block_size), np.int32(shift_size), np.int32(num_blocks))
+
+    dft_kernel.set_args(data_buffer, result_buffer, data_length, np.int32(block_size), np.int32(shift_size))
 
     cl.enqueue_nd_range_kernel(queue, dft_kernel, (num_blocks,), None)
+
     cl.enqueue_copy(queue, dft_result, result_buffer).wait()
 
-    aggregated_dft = np.sum(np.abs(dft_result), axis=0) / num_blocks
-
-    return aggregated_dft
-
-def plot_frequency_spectrum(aggregated_dft, sample_rate, block_size):
-    freqs = np.fft.fftfreq(block_size, d=1/sample_rate)[:block_size//2]
-    plt.figure(figsize=(10, 6))
-    plt.plot(freqs, aggregated_dft)
-    plt.xlabel('Frequenz (Hz)')
-    plt.ylabel('Amplitude')
-    plt.title('Frequenzspektrum')
-    plt.grid(True)
-    plt.show()
+    return np.sum(np.abs(dft_result), axis=0) / num_blocks
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DFT Analysis on WAV file using OpenCL')
@@ -76,4 +63,4 @@ if __name__ == "__main__":
 
     data, sample_rate = read_wav_file(args.file_path)
     aggregated_dft = perform_dft(data, args.block_size, args.shift_size, args.threshold)
-    plot_frequency_spectrum(aggregated_dft, sample_rate, args.block_size)
+    # Hier können Sie mit aggregated_dft weiterarbeiten, z.B. plotten oder speichern
