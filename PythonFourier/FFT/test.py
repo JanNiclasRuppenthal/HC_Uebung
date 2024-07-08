@@ -1,66 +1,94 @@
 import numpy as np
 import pyopencl as cl
-import argparse
-from scipy.io import wavfile
+import scipy.io.wavfile as wav
+import matplotlib.pyplot as plt
 
-def read_wav_file(file_path):
-    sample_rate, data = wavfile.read(file_path)
-    if len(data.shape) > 1:
-        data = data[:, 0]  # Falls Stereo, nur einen Kanal verwenden
-    return data, sample_rate
+# Lade die WAV-Datei
+def load_wav(filename):
+    sample_rate, data = wav.read(filename)
+    return sample_rate, data
 
-def perform_dft(data, block_size, shift_size, threshold):
-    context = cl.create_some_context()
+def perform_dft(data, block_size, shift_size):
+    # Setup OpenCL context and queue
+    platform = cl.get_platforms()[0]
+    device = platform.get_devices()[0]
+    context = cl.Context([device])
     queue = cl.CommandQueue(context)
 
     mf = cl.mem_flags
     data = data.astype(np.float32)
-    num_blocks = (len(data) - block_size) // shift_size + 1
-    data_length = np.int32(len(data))  # Länge des Daten-Arrays
+    data_length = len(data)
+    num_blocks = (data_length - block_size) // shift_size + 1
 
-    dft_result = np.zeros((num_blocks, block_size // 2), dtype=np.complex64)
+    # Allocate memory on the device
+    data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
+    result_real_buffer = cl.Buffer(context, mf.WRITE_ONLY, size=(num_blocks * block_size // 2) * np.dtype(np.float32).itemsize)
+    result_imag_buffer = cl.Buffer(context, mf.WRITE_ONLY, size=(num_blocks * block_size // 2) * np.dtype(np.float32).itemsize)
 
+    # Build and execute the OpenCL program
     program_source = """
-    __kernel void dft_kernel(__global const float *data, __global float2 *result, int data_length, int block_size, int shift_size) {
+    __kernel void dft_kernel(__global const float *data, __global float *result_real, __global float *result_imag, int data_length, int block_size, int shift_size) {
         int gid = get_global_id(0);
         int block_start = gid * shift_size;
+
         if (block_start + block_size > data_length) return;
 
         for (int k = 0; k < block_size / 2; k++) {
-            float2 sum = (float2)(0.0f, 0.0f);
+            float sum_real = 0.0f;
+            float sum_imag = 0.0f;
             for (int n = 0; n < block_size; n++) {
                 float angle = -2.0f * M_PI * k * n / block_size;
-                float2 exp_term = (float2)(cos(angle), sin(angle));
-                sum += (float2)(data[block_start + n], 0.0f) * exp_term;
+                float cos_val = cos(angle);
+                float sin_val = sin(angle);
+                float data_val = data[block_start + n];
+                sum_real += data_val * cos_val;
+                sum_imag += data_val * sin_val;
             }
-            result[gid * block_size / 2 + k] = sum;
+            result_real[gid * (block_size / 2) + k] = sum_real;
+            result_imag[gid * (block_size / 2) + k] = sum_imag;
         }
     }
     """
 
     program = cl.Program(context, program_source).build()
+    dft_kernel_func = program.dft_kernel
+    dft_kernel_func.set_args(data_buffer, result_real_buffer, result_imag_buffer, np.int32(data_length), np.int32(block_size), np.int32(shift_size))
 
-    data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
-    result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
+    cl.enqueue_nd_range_kernel(queue, dft_kernel_func, (num_blocks,), None)
 
-    dft_kernel = program.dft_kernel
+    # Read the result back to host
+    result_real = np.zeros(num_blocks * (block_size // 2), dtype=np.float32)
+    result_imag = np.zeros(num_blocks * (block_size // 2), dtype=np.float32)
+    cl.enqueue_copy(queue, result_real, result_real_buffer).wait()
+    cl.enqueue_copy(queue, result_imag, result_imag_buffer).wait()
 
-    dft_kernel.set_args(data_buffer, result_buffer, data_length, np.int32(block_size), np.int32(shift_size))
+    # Aggregate the results
+    dft_result = np.zeros(block_size // 2, dtype=np.complex64)
+    for i in range(num_blocks):
+        start_index = i * (block_size // 2)
+        end_index = (i + 1) * (block_size // 2)
+        dft_result += result_real[start_index:end_index] + 1j * result_imag[start_index:end_index]
 
-    cl.enqueue_nd_range_kernel(queue, dft_kernel, (num_blocks,), None)
+    aggregated_dft = np.abs(dft_result) / num_blocks
 
-    cl.enqueue_copy(queue, dft_result, result_buffer).wait()
+    return aggregated_dft
 
-    return np.sum(np.abs(dft_result), axis=0) / num_blocks
+def main():
+    sample_rate, data = load_wav("../wave.wav")
+
+    # Bestimme die Blockgröße und die Schrittweite
+    block_size = 512  # oder eine andere geeignete Größe
+    shift_size = 1  # Schrittweite für die Blockverschiebung
+
+    # Berechne DFT blockweise mit OpenCL
+    result = perform_dft(data, block_size, shift_size)
+
+    # Plot the result
+    plt.plot(result)
+    plt.title("Blockwise DFT of WAV file")
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Magnitude")
+    plt.show()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='DFT Analysis on WAV file using OpenCL')
-    parser.add_argument('file_path', type=str, help='Path to the WAV file')
-    parser.add_argument('block_size', type=int, help='Block size for DFT')
-    parser.add_argument('shift_size', type=int, help='Shift size for DFT')
-    parser.add_argument('threshold', type=float, help='Threshold for DFT result')
-    args = parser.parse_args()
-
-    data, sample_rate = read_wav_file(args.file_path)
-    aggregated_dft = perform_dft(data, args.block_size, args.shift_size, args.threshold)
-    # Hier können Sie mit aggregated_dft weiterarbeiten, z.B. plotten oder speichern
+    main()

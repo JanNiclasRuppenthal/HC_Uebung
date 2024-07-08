@@ -21,11 +21,13 @@ def perform_dft(data, block_size, shift_size, threshold):
     mf = cl.mem_flags
     data = data.astype(np.float32)
     num_blocks = (len(data) - block_size) // shift_size + 1
-    dft_result = np.zeros((num_blocks, block_size // 2), dtype=np.complex64)
+    dft_result = np.zeros(block_size//2, dtype=np.complex64)
+    gids = np.zeros(num_blocks, dtype=np.int32)  # Puffer für die GIDs
 
     program_source = """
-    __kernel void dft_kernel(__global const float *data, __global float2 *result, int count_units, int block_size, int shift_size, int num_blocks) {
+    __kernel void dft_kernel(__global const float2 *data, __global float2 *result, __global int *gids, int count_units, int block_size, int shift_size, int num_blocks, int data_length) {
         int gid = get_global_id(0);
+        gids[gid] = gid;  // Speichere die GID in den Puffer
         int block_start = gid * shift_size;
         if (block_start + block_size > data_length) return;
 
@@ -33,10 +35,12 @@ def perform_dft(data, block_size, shift_size, threshold):
             float2 sum = (float2)(0.0f, 0.0f);
             for (int n = 0; n < block_size; n++) {
                 float angle = -2.0f * M_PI * k * n / block_size;
-                float2 exp_term = (float2)(cos(angle), sin(angle));
-                sum += (float2)(data[block_start + n], 0.0f) * exp_term;
+                float2 exp_term = (cos(angle), sin(angle));
+                sum += data[block_start + n] * exp_term;
             }
-            result[gid * block_size / 2 + k] = sum;
+            
+            barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+            result[k] += fabs(sum);
         }
     }
     """
@@ -45,14 +49,18 @@ def perform_dft(data, block_size, shift_size, threshold):
 
     data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
     result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
+    gids_buffer = cl.Buffer(context, mf.WRITE_ONLY, gids.nbytes)  # Puffer für die GIDs
 
     dft_kernel = program.dft_kernel
-    dft_kernel.set_args(data_buffer, result_buffer, np.int32(units_count), np.int32(block_size), np.int32(shift_size), np.int32(num_blocks))
+    dft_kernel.set_args(data_buffer, result_buffer, gids_buffer, np.int32(units_count), np.int32(block_size), np.int32(shift_size), np.int32(num_blocks), np.int32(len(data)))
 
     cl.enqueue_nd_range_kernel(queue, dft_kernel, (num_blocks,), None)
     cl.enqueue_copy(queue, dft_result, result_buffer).wait()
+    cl.enqueue_copy(queue, gids, gids_buffer).wait()  # Kopiere die GIDs zum Host
 
-    aggregated_dft = np.sum(np.abs(dft_result), axis=0) / num_blocks
+    # Ausgabe der GIDs
+
+    aggregated_dft = np.abs(dft_result) / num_blocks
 
     return aggregated_dft
 
