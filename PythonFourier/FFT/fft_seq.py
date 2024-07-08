@@ -44,13 +44,15 @@ def analyze(data, block_size, shift_size):
     num_samples = len(data)
     num_blocks = (num_samples - block_size) // shift_size + 1
 
-    aggregated_fft = np.zeros(block_size//2) #Redundanz der Spiegelung entfernen
+    aggregated_fft = np.zeros(block_size//2, dtype=float) #Redundanz der Spiegelung entfernen
+    dft_results = np.zeros((num_blocks, block_size), dtype=complex)
 
     # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
     for i in range(0, len(data) - block_size + 1, shift_size):
         block = data[i:i+block_size]
         fft_result = np.fft.fft(block)
 
+        dft_results[i] = fft_result
         '''
         Summiere alle Ergebnisse auf.
         Wir verwenden den Absolutbetrag der Ergebnisse, da diese komplexe Zahlen sind.

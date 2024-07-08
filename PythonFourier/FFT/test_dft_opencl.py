@@ -21,22 +21,22 @@ def perform_dft(data, block_size, shift_size, threshold):
     mf = cl.mem_flags
     data = data.astype(np.float32)
     num_blocks = (len(data) - block_size) // shift_size + 1
-    dft_result = np.zeros(block_size//2, dtype=np.complex64)
+    dft_result = np.zeros(block_size, dtype=np.float32)
     gids = np.zeros(num_blocks, dtype=np.int32)  # Puffer für die GIDs
 
     program_source = """
-    __kernel void dft_kernel(__global const float2 *data, __global float2 *result, __global int *gids, int count_units, int block_size, int shift_size, int num_blocks, int data_length) {
+    __kernel void dft_kernel(__global const float *data, __global float *result, __global int *gids, int count_units, int block_size, int shift_size, int num_blocks, int data_length) {
         int gid = get_global_id(0);
         gids[gid] = gid;  // Speichere die GID in den Puffer
         int block_start = gid * shift_size;
         if (block_start + block_size > data_length) return;
 
-        for (int k = 0; k < block_size / 2; k++) {
-            float2 sum = (float2)(0.0f, 0.0f);
+        for (int k = 0; k < block_size; k++) {
+            float sum = 0.0f;
             for (int n = 0; n < block_size; n++) {
-                float angle = -2.0f * M_PI * k * n / block_size;
-                float2 exp_term = (cos(angle), sin(angle));
-                sum += data[block_start + n] * exp_term;
+                double angle = -2.0f * M_PI * k * n / block_size;
+                //float2 exp_term = (cos(angle), sin(angle));
+                sum += data[block_start + n] * cos(angle);
             }
             
             barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
@@ -62,7 +62,7 @@ def perform_dft(data, block_size, shift_size, threshold):
 
     aggregated_dft = np.abs(dft_result) / num_blocks
 
-    return aggregated_dft
+    return aggregated_dft[:block_size//2]
 
 def plot_frequency_spectrum(aggregated_dft, sample_rate, block_size):
     freqs = np.fft.fftfreq(block_size, d=1/sample_rate)[:block_size//2]
