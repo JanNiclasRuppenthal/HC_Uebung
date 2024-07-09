@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pyopencl as cl
 import matplotlib.pyplot as plt
@@ -21,27 +22,38 @@ def perform_dft(data, block_size, shift_size, threshold):
     mf = cl.mem_flags
     data = data.astype(np.float32)
     num_blocks = (len(data) - block_size) // shift_size + 1
-    dft_result = np.zeros(block_size, dtype=np.float32)
+    dft_result = np.zeros((num_blocks, block_size) , dtype=np.float32)
     gids = np.zeros(num_blocks, dtype=np.int32)  # Puffer für die GIDs
 
     program_source = """
+    #define SIZE 256 // is the maximum
     __kernel void dft_kernel(__global const float *data, __global float *result, __global int *gids, int count_units, int block_size, int shift_size, int num_blocks, int data_length) {
         int gid = get_global_id(0);
         gids[gid] = gid;  // Speichere die GID in den Puffer
         int block_start = gid * shift_size;
         if (block_start + block_size > data_length) return;
-
-        for (int k = 0; k < block_size; k++) {
-            float sum = 0.0f;
+        
+        //__local float sum[SIZE];
+        float sum = 0.0;
+        for (int k = 0; k < block_size; k+=2) {
+            float sum_real = 0.0f;
+            float sum_img = 0.0f;
             for (int n = 0; n < block_size; n++) {
                 double angle = -2.0f * M_PI * k * n / block_size;
-                //float2 exp_term = (cos(angle), sin(angle));
-                sum += data[block_start + n] * cos(angle);
+                sum_real += data[block_start + n] * cos(angle);
+                sum_img -= data[block_start + n] * sin(angle);
             }
             
-            barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-            result[k] += fabs(sum);
+            result[gid * block_size + k + 1] = sum_img;
+            result[gid * block_size + k] = sum_real;
         }
+        
+        /*barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+        for(int i = 0; i < block_size / 2; i++) 
+        {
+            result[i] += fabs(sum[i]);
+        }*/
+        
     }
     """
 
@@ -58,9 +70,7 @@ def perform_dft(data, block_size, shift_size, threshold):
     cl.enqueue_copy(queue, dft_result, result_buffer).wait()
     cl.enqueue_copy(queue, gids, gids_buffer).wait()  # Kopiere die GIDs zum Host
 
-    # Ausgabe der GIDs
-
-    aggregated_dft = np.abs(dft_result) / num_blocks
+    aggregated_dft = np.abs(dft_result[1:]) / num_blocks
 
     return aggregated_dft[:block_size//2]
 
@@ -74,7 +84,15 @@ def plot_frequency_spectrum(aggregated_dft, sample_rate, block_size):
     plt.grid(True)
     plt.show()
 
+def print_run_time(run_time):
+    minutes = run_time // 60
+    seconds = run_time % 60
+
+    print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
+
 if __name__ == "__main__":
+    start_time = time.time()
+
     parser = argparse.ArgumentParser(description='DFT Analysis on WAV file using OpenCL')
     parser.add_argument('file_path', type=str, help='Path to the WAV file')
     parser.add_argument('block_size', type=int, help='Block size for DFT')
@@ -84,4 +102,8 @@ if __name__ == "__main__":
 
     data, sample_rate = read_wav_file(args.file_path)
     aggregated_dft = perform_dft(data, args.block_size, args.shift_size, args.threshold)
+
+    run_time = time.time() - start_time
+    print_run_time(run_time)
+
     plot_frequency_spectrum(aggregated_dft, sample_rate, args.block_size)

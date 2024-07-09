@@ -8,10 +8,10 @@ def get_all_arguments():
     file_path = str(sys.argv[1])
     block_size = int(sys.argv[2])
 
-    if block_size < 64:
-        block_size = 64
-    elif block_size > 512:
-        block_size = 512
+    # if block_size < 64:
+    #     block_size = 64
+    # elif block_size > 512:
+    #     block_size = 512
 
     shift_size = int(sys.argv[3])
     if shift_size < 1:
@@ -45,7 +45,7 @@ def analyze(data, block_size, shift_size):
     num_blocks = (num_samples - block_size) // shift_size + 1
 
     aggregated_fft = np.zeros(block_size//2, dtype=float) #Redundanz der Spiegelung entfernen
-    dft_results = np.zeros((num_blocks, block_size), dtype=complex)
+    dft_results = np.zeros((num_blocks, block_size), dtype=float)
 
     # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
     for i in range(0, len(data) - block_size + 1, shift_size):

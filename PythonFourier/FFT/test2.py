@@ -1,130 +1,91 @@
-import sys
-import time
 import numpy as np
 import pyopencl as cl
+import matplotlib.pyplot as plt
+import argparse
 from scipy.io import wavfile
 
-# OpenCL Kernel zur Durchführung der FFT mit gid-Liste
-kernel_code = """
-#define len 64   // Wert für N Punkt
-#define PI 3.141593f
-__kernel void fft(__global float2 *data, const int block_size, __global float2 *output) {
-    int gid = get_global_id(0);
-    float2 sum = (float2)(0.0f, 0.0f);
-    float angle;
-    
-    for (int k = 0; k < block_size; ++k) {
-        angle = -2.0f * PI * gid * k / (float)block_size;
-    sum += data[k] * (float2)(cos(angle), sin(angle));
-    }
-    
-    output[gid] += sum;
-}
-""";
-
-
-def get_all_arguments():
-    file_path = str(sys.argv[1])
-    block_size = int(sys.argv[2])
-
-    if block_size < 64:
-        block_size = 64
-    elif block_size > 512:
-        block_size = 512
-
-    shift_size = int(sys.argv[3])
-    if shift_size < 1:
-        shift_size = 1
-    elif shift_size > block_size:
-        shift_size = block_size
-
-    threshold = float(sys.argv[4])
-
-    if threshold < 0:
-        threshold = 0
-
-    return file_path, block_size, shift_size, threshold
-
-
-def analyze_wav_file(file_path):
+def read_wav_file(file_path):
     sample_rate, data = wavfile.read(file_path)
-
     if len(data.shape) > 1:
-        data = data[:, 0]
-
+        data = data[:, 0]  # Falls Stereo, nur einen Kanal verwenden
     return data, sample_rate
 
+def perform_dft(data, block_size, shift_size, threshold):
+    platforms = cl.get_platforms()
+    devices = platforms[0].get_devices(cl.device_type.GPU)
+    units_count = devices[0].max_compute_units
 
-def analyze(data, block_size, shift_size):
-    num_samples = len(data)
-    num_blocks = (num_samples - block_size) // shift_size + 1
-
-    # Initialisiere OpenCL
-    platform = cl.get_platforms()[0]
-    device = platform.get_devices()[0]
-    context = cl.Context([device])
+    context = cl.create_some_context()
     queue = cl.CommandQueue(context)
-    program = cl.Program(context, kernel_code).build()
 
-    # Erstelle Buffers für Daten, output und gid_list
-    data_buffer = cl.Buffer(context, cl.mem_flags.READ_WRITE, size=data.nbytes)
-    output_buffer = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, size=data.nbytes)
-    gid_list_buffer = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, size=num_blocks * np.int32().itemsize)
+    mf = cl.mem_flags
+    data = data.astype(np.float32)
+    num_blocks = (len(data) - block_size) // shift_size + 1
+    dft_result = np.zeros(block_size // 2, dtype=np.float32)
 
-    # Kopiere Daten auf den Buffer
-    cl.enqueue_copy(queue, data_buffer, data)
+    program_source = """
+    #define SIZE 256
+    __kernel void dft_kernel(__global const float *data, __global float *result, int count_units, int block_size, int shift_size, int num_blocks, int data_length) {
+        int gid = get_global_id(0);
+        int block_start = gid * shift_size;
+        if (block_start + block_size > data_length) return;
+        
+        __local float sum[SIZE];
 
-    # Führe den Kernel aus
-    program.fft(queue, (num_blocks,), None, data_buffer, np.int32(block_size), output_buffer)
+        //float sum = 0.0;
+        for (int k = 0; k < block_size / 2; k++) {
+            float sum_real = 0.0f;
+            float sum_img = 0.0f;
+            for (int n = 0; n < block_size; n++) {
+                double angle = -2.0f * M_PI * k * n / block_size;
+                sum_real += data[block_start + n] * cos(angle);
+                sum_img -= data[block_start + n] * sin(angle);
+            }
+            
+            sum[k] = sqrt(sum_real * sum_real + sum_img * sum_img);
+        }
+        
+        barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+        for(int i = 0; i < block_size / 2; i++) 
+        {
+            result[i] += sum[i];
+        }
+    }
+    """
 
-    # Kopiere die Ergebnisse zurück
-    output = np.empty_like(data)
-    cl.enqueue_copy(queue, output, output_buffer).wait()
+    program = cl.Program(context, program_source).build()
 
-    # Berechne aggregierte FFT
-    aggregated_fft = np.zeros(block_size//2)
+    data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
+    result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
 
-    # Hier könnte die tatsächliche FFT-Berechnung durchgeführt werden
-    # Zum Beispiel: np.fft.fft(output, block_size)
+    dft_kernel = program.dft_kernel
+    dft_kernel.set_args(data_buffer, result_buffer, np.int32(units_count), np.int32(block_size), np.int32(shift_size), np.int32(num_blocks), np.int32(len(data)))
 
-    aggregated_fft /= num_blocks
+    cl.enqueue_nd_range_kernel(queue, dft_kernel, (num_blocks,), None)
+    cl.enqueue_copy(queue, dft_result, result_buffer).wait()
 
-    return aggregated_fft
+    aggregated_dft = np.abs(dft_result) / num_blocks
 
+    return aggregated_dft
 
-
-def write_data_to_file(data, file_path):
-    with open(file_path, 'w') as file:
-        for item in data:
-            file.write(str(item) + '\n')
-
-
-def print_run_time(run_time):
-    minutes = run_time // 60
-    seconds = run_time % 60
-    print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
-
-
-def main():
-    start_time = time.time()
-
-    file_path, block_size, shift_size, threshold = get_all_arguments()
-    wav_data, sample_rate = analyze_wav_file(file_path)
-
-    aggregated_fft = analyze(wav_data, block_size, shift_size)
-
-    run_time = time.time() - start_time
-    print_run_time(run_time)
-
-    write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
-    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
-    write_data_to_file(wav_data, 'wav_data.txt')
-
-    result = [(index * sample_rate / block_size, aggregated_fft[index])
-              for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
-
-    print(result)
-
+def plot_frequency_spectrum(aggregated_dft, sample_rate, block_size):
+    freqs = np.fft.fftfreq(block_size, d=1/sample_rate)[:block_size//2]
+    plt.figure(figsize=(10, 6))
+    plt.plot(freqs, aggregated_dft)
+    plt.xlabel('Frequenz (Hz)')
+    plt.ylabel('Amplitude')
+    plt.title('Frequenzspektrum')
+    plt.grid(True)
+    plt.show()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='DFT Analysis on WAV file using OpenCL')
+    parser.add_argument('file_path', type=str, help='Path to the WAV file')
+    parser.add_argument('block_size', type=int, help='Block size for DFT')
+    parser.add_argument('shift_size', type=int, help='Shift size for DFT')
+    parser.add_argument('threshold', type=float, help='Threshold for DFT result')
+    args = parser.parse_args()
+
+    data, sample_rate = read_wav_file(args.file_path)
+    aggregated_dft = perform_dft(data, args.block_size, args.shift_size, args.threshold)
+    plot_frequency_spectrum(aggregated_dft, sample_rate, args.block_size)
