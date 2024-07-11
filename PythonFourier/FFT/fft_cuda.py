@@ -4,7 +4,7 @@ import math
 from util import *
 
 @cuda.jit
-def sliding_fft(input_signal, window_size, step_size, output_fft):
+def fft(input_signal, window_size, step_size, output_fft):
     idx = cuda.grid(1)
     if idx * step_size + window_size < input_signal.size:
         windowed_signal = input_signal[idx * step_size: idx * step_size + window_size]
@@ -24,7 +24,7 @@ def analyze(data, block_size, shift_size):
     num_blocks = (len(data) - block_size) // shift_size + 1
     output_fft = np.zeros((num_blocks, block_size), dtype=np.float32)
 
-    # Daten auf das GPU
+    # Daten auf die GPU laden
     d_input_signal = cuda.to_device(data.astype(np.float32))
     d_output_fft = cuda.to_device(output_fft)
 
@@ -33,20 +33,13 @@ def analyze(data, block_size, shift_size):
     blocks_per_grid = (num_blocks + (threads_per_block - 1)) // threads_per_block
 
     # Kernel starten
-    sliding_fft[blocks_per_grid, threads_per_block](d_input_signal, block_size, shift_size, d_output_fft)
+    fft[blocks_per_grid, threads_per_block](d_input_signal, block_size, shift_size, d_output_fft)
 
+    #Warte bis die Berechnung im Kernel fertig ist
     cuda.synchronize()
-
-    print("Start to copy results")
-    start_time = time.time()
-
     aggregated_fft = d_output_fft.copy_to_host()
-    run_time = time.time() - start_time
 
-    from util import print_run_time
-    print_run_time(run_time)
-
-    aggregated_fft /= num_blocks
+    aggregated_fft = np.sum(aggregated_fft, axis=0) / num_blocks
 
     return aggregated_fft
 
