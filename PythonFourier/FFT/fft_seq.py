@@ -45,7 +45,7 @@ def analyze(data, block_size, shift_size):
     num_blocks = (num_samples - block_size) // shift_size + 1
 
     aggregated_fft = np.zeros(block_size//2, dtype=float) #Redundanz der Spiegelung entfernen
-    dft_results = np.zeros((num_blocks, block_size), dtype=float)
+    dft_results = np.zeros((num_blocks, block_size), dtype=complex)
 
     # Fuer jeden Datenblock wird die jeweilige ausgewaehlte Funktion angewendet.
     for i in range(0, len(data) - block_size + 1, shift_size):

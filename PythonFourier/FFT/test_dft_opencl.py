@@ -22,19 +22,15 @@ def perform_dft(data, block_size, shift_size):
     mf = cl.mem_flags
     data = data.astype(np.float32)
     num_blocks = (len(data) - block_size) // shift_size + 1
-    dft_result = np.zeros((num_blocks, block_size//2) , dtype=np.float32)
-    gids = np.zeros(num_blocks, dtype=np.int32)  # Puffer für die GIDs
+    max_limit = min(300000, num_blocks)
 
     program_source = """
-    #define SIZE 256 // is the maximum
-    __kernel void dft_kernel(__global const float *data, __global float *result, __global int *gids, int count_units, int block_size, int shift_size, int num_blocks, int data_length) {
+    __kernel void dft_kernel(__global const float *data, __global float *result, __global int *gids, int count_units, int block_size, int shift_size, int num_blocks, int data_length, int index, int max_limit) {
         int gid = get_global_id(0);
         gids[gid] = gid;  // Speichere die GID in den Puffer
-        int block_start = gid * shift_size;
+        int block_start = (gid + index * max_limit) * shift_size;
         if (block_start + block_size > data_length) return;
         
-        __local float sum[SIZE];
-        //float sum = 0.0;
         for (int k = 0; k < block_size/2; k++) {
             float sum_real = 0.0f;
             float sum_img = 0.0f;
@@ -43,34 +39,39 @@ def perform_dft(data, block_size, shift_size):
                 sum_real += data[block_start + n] * cos(angle);
                 sum_img += data[block_start + n] * sin(angle);
             }
-            //sum[k] = sqrt(sum_real * sum_real + sum_img * sum_img);
             result[gid * block_size/2 + k] = sqrt(sum_real * sum_real + sum_img * sum_img);
             
-        }
-        
-        /*barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-        for(int i = 0; i < block_size; i++) 
-        {
-            result[gid * block_size + i] = sum[i];
-        }*/
-        
+        }       
     }
     """
 
     program = cl.Program(context, program_source).build()
-
-    data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
-    result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
-    gids_buffer = cl.Buffer(context, mf.WRITE_ONLY, gids.nbytes)  # Puffer für die GIDs
-
     dft_kernel = program.dft_kernel
-    dft_kernel.set_args(data_buffer, result_buffer, gids_buffer, np.int32(units_count), np.int32(block_size), np.int32(shift_size), np.int32(num_blocks), np.int32(len(data)))
 
-    cl.enqueue_nd_range_kernel(queue, dft_kernel, (num_blocks,), None)
-    cl.enqueue_copy(queue, dft_result, result_buffer).wait()
-    cl.enqueue_copy(queue, gids, gids_buffer).wait()  # Kopiere die GIDs zum Host
+    index = 0
+    aggregated_dft = np.zeros(block_size//2, dtype=np.float32)
+    num_blocks_temp = num_blocks
+    while max_limit != 0:
+        dft_result = np.zeros((max_limit, block_size//2), dtype=np.float32)
+        gids = np.zeros(max_limit, dtype=np.int32)  # Puffer für die GIDs
+        data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
+        result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
+        gids_buffer = cl.Buffer(context, mf.WRITE_ONLY, gids.nbytes)  # Puffer für die GIDs
 
-    aggregated_dft = np.sum(dft_result, axis=0) / num_blocks
+        dft_kernel.set_args(data_buffer, result_buffer, gids_buffer, np.int32(units_count), np.int32(block_size), np.int32(shift_size), np.int32(num_blocks), np.int32(len(data)), np.int32(index), np.int32(max_limit))
+
+        cl.enqueue_nd_range_kernel(queue, dft_kernel, (max_limit,), None)
+        cl.enqueue_copy(queue, dft_result, result_buffer).wait()
+        cl.enqueue_copy(queue, gids, gids_buffer).wait()  # Kopiere die GIDs zum Host
+
+        aggregated_dft += np.sum(dft_result, axis=0)
+
+        index += 1
+        num_blocks_temp -= max_limit
+        max_limit = min(max_limit, num_blocks_temp)
+
+
+    aggregated_dft /= num_blocks
 
     return aggregated_dft
 
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     data, sample_rate = read_wav_file(args.file_path)
-    aggregated_dft = perform_dft(data, args.block_size, args.shift_size, args.threshold)
+    aggregated_dft = perform_dft(data, args.block_size, args.shift_size)
 
     run_time = time.time() - start_time
     print_run_time(run_time)
