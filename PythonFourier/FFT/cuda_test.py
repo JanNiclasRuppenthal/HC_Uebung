@@ -18,7 +18,7 @@ def sliding_fft(input_signal, window_size, step_size, output_fft):
     if idx * step_size + window_size < input_signal.size:
         # Fenster anwenden
         windowed_signal = input_signal[idx * step_size: idx * step_size + window_size]
-        fft_result = cuda.local.array(shape=(window_size,), dtype=float32)
+        # fft_result = cuda.local.array(shape=(window_size,), dtype=float32)
 
         # FFT durchführen (Cooley-Tukey-Algorithmus für Einfachheit)
         N = window_size
@@ -29,10 +29,10 @@ def sliding_fft(input_signal, window_size, step_size, output_fft):
                 angle = 2.0 * math.pi * k * n / N
                 real_sum += windowed_signal[n] * math.cos(angle)
                 imag_sum -= windowed_signal[n] * math.sin(angle)
-            fft_result[k] = math.sqrt(real_sum**2 + imag_sum**2)
+            output_fft[idx, k] = math.sqrt(real_sum**2 + imag_sum**2)
 
-        for k in range(window_size):
-            output_fft[idx, k] = fft_result[k]
+        # for k in range(window_size):
+        #     output_fft[idx, k] = fft_result[k]
 
 def plot_spectrum(output_fft, sample_rate, window_size, step_size):
     time_bins, freq_bins = output_fft.shape
