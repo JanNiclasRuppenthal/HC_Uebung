@@ -1,6 +1,4 @@
-import time
 import numpy as np
-
 from util import *
 
 # Neu fuer Aufgabe 03

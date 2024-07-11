@@ -1,4 +1,4 @@
-import  time
+import time
 import sys
 from scipy.io import wavfile
 
