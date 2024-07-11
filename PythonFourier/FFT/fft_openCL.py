@@ -17,7 +17,7 @@ def analyze(data, block_size, shift_size):
     max_limit = min(200000, num_blocks)
 
     program_source = """
-    __kernel void dft_kernel(__global const float *data, __global float *result, int count_units, int block_size, int shift_size, int num_blocks, int data_length, int index, int max_limit) {
+    __kernel void fft_kernel(__global const float *data, __global float *result, int count_units, int block_size, int shift_size, int num_blocks, int data_length, int index, int max_limit) {
         int gid = get_global_id(0);
         int block_start = (gid + index * max_limit) * shift_size;
         if (block_start + block_size > data_length) return;
@@ -37,32 +37,32 @@ def analyze(data, block_size, shift_size):
     """
 
     program = cl.Program(context, program_source).build()
-    dft_kernel = program.dft_kernel
+    fft_kernel = program.fft_kernel
 
     index = 0
-    aggregated_dft = np.zeros(block_size // 2, dtype=np.float32)
+    aggregated_fft = np.zeros(block_size // 2, dtype=np.float32)
     num_blocks_temp = num_blocks
     while max_limit != 0:
-        dft_result = np.zeros((max_limit, block_size // 2), dtype=np.float32)
+        fft_result = np.zeros((max_limit, block_size // 2), dtype=np.float32)
         data_buffer = cl.Buffer(context, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=data)
-        result_buffer = cl.Buffer(context, mf.WRITE_ONLY, dft_result.nbytes)
+        result_buffer = cl.Buffer(context, mf.WRITE_ONLY, fft_result.nbytes)
 
-        dft_kernel.set_args(data_buffer, result_buffer, np.int32(units_count), np.int32(block_size),
+        fft_kernel.set_args(data_buffer, result_buffer, np.int32(units_count), np.int32(block_size),
                             np.int32(shift_size), np.int32(num_blocks), np.int32(len(data)), np.int32(index),
                             np.int32(max_limit))
 
-        cl.enqueue_nd_range_kernel(queue, dft_kernel, (max_limit,), None)
-        cl.enqueue_copy(queue, dft_result, result_buffer).wait()
+        cl.enqueue_nd_range_kernel(queue, fft_kernel, (max_limit,), None)
+        cl.enqueue_copy(queue, fft_result, result_buffer).wait()
 
-        aggregated_dft += np.sum(dft_result, axis=0)
+        aggregated_fft += np.sum(fft_result, axis=0)
 
         index += 1
         num_blocks_temp -= max_limit
         max_limit = min(max_limit, num_blocks_temp)
 
-    aggregated_dft /= num_blocks
+    aggregated_fft /= num_blocks
 
-    return aggregated_dft
+    return aggregated_fft
 
 
 if __name__ == "__main__":
