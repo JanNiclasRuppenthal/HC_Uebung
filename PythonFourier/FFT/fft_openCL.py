@@ -15,7 +15,7 @@ def analyze(data, block_size, shift_size):
     mf = cl.mem_flags
     data = data.astype(np.float32)
     num_blocks = (len(data) - block_size) // shift_size + 1
-    max_limit = min(200000, num_blocks)
+    max_limit = min(4000000, num_blocks)
 
     program_source = """
     __kernel void fft_kernel(__global const float *data, __global float *result, int block_size, int shift_size, int data_length) {

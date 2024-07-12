@@ -28,11 +28,10 @@ def analyze(data, block_size, shift_size):
     d_input_signal = cuda.to_device(data.astype(np.float32))
     d_output_fft = cuda.to_device(output_fft)
 
-    # Bloecke konfigurieren
     threads_per_block = 128
     blocks_per_grid = (num_blocks + (threads_per_block - 1)) // threads_per_block
 
-    # Kernel starten
+    # Starte den Kernel auf der Nvidia GPU
     fft[blocks_per_grid, threads_per_block](d_input_signal, block_size, shift_size, d_output_fft)
 
     #Warte bis die Berechnung im Kernel fertig ist

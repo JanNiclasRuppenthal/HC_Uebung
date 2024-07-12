@@ -56,8 +56,14 @@ Jede der Funktionen benoetigt auch noch verschiedene Parameter, die man in <Sons
 
 
 Beispiele der Befehle, die auch fuer den Ergebnisbericht verwendet wurden:
-
-
+sine.wav sine 1 44100 440
+add.wav add 1 44100 400 800 1200
+am.wav am 1 44100 440 600
+fm.wav fm 1 44100 440 600 2
+envelope.wav envelope 1 44100 440
+harmonics.wav harmonics 1 44100 440 3
+chirp.wav chirp 1 44100 400 1200
+noise.wav noise 1 44100
 
 
 Aufgabe 03:

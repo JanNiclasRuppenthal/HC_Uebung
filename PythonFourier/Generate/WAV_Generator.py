@@ -40,6 +40,7 @@ def sine_wave_with_envelope(frequency):
     sine_wave = 0.5 * np.sin(2 * np.pi * frequency * timestamps)
     return sine_wave * envelope
 
+
 def harmonics_wave(fundamental_freq, num_harmonics):
     signal = np.zeros_like(timestamps)
     for i in range(1, num_harmonics + 1):

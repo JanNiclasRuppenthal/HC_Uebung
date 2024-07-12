@@ -28,6 +28,7 @@ def analyze(data, block_size, shift_size):
     num_blocks = (num_samples - block_size) // shift_size + 1
 
     cpu_count = os.cpu_count()
+    print("#Prozessoren: %s" % cpu_count)
     threads = []
     lock = threading.Lock()
     aggregated_fft = np.zeros(block_size//2)
