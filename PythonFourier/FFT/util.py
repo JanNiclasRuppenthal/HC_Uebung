@@ -3,7 +3,7 @@ import sys
 from scipy.io import wavfile
 
 
-def get_all_arguments():
+def __get_all_arguments():
     file_path = str(sys.argv[1])
     block_size = int(sys.argv[2])
 
@@ -26,7 +26,7 @@ def get_all_arguments():
     return file_path, block_size, shift_size, threshold
 
 
-def analyze_wav_file(file_path):
+def __analyze_wav_file(file_path):
     sample_rate, data = wavfile.read(file_path)
 
     ''' 
@@ -39,16 +39,16 @@ def analyze_wav_file(file_path):
     return data, sample_rate
 
 
-def write_data_to_file(data, file_path):
+def __write_data_to_file(data, file_path):
     with open(file_path, 'w') as file:
         for item in data:
             file.write(str(item) + '\n')
 
 
-def write_data_to_files(aggregated_fft, wav_data, sample_rate, block_size, threshold):
-    write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
-    write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
-    write_data_to_file(wav_data, 'wav_data.txt')
+def __write_data_to_files(aggregated_fft, wav_data, sample_rate, block_size, threshold):
+    __write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
+    __write_data_to_file(aggregated_fft, 'aggregated_fft.txt')
+    __write_data_to_file(wav_data, 'wav_data.txt')
 
 
 def print_run_time(run_time):
@@ -58,7 +58,7 @@ def print_run_time(run_time):
     print('Laufzeit: {} Minuten und {:.2f} Sekunden'.format(minutes, seconds))
 
 
-def print_results(aggregated_fft, sample_rate, block_size, threshold):
+def __print_results(aggregated_fft, sample_rate, block_size, threshold):
     result = [(index * sample_rate / block_size, aggregated_fft[index])
               for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
 
@@ -66,8 +66,8 @@ def print_results(aggregated_fft, sample_rate, block_size, threshold):
 
 
 def main(analyze_method):
-    file_path, block_size, shift_size, threshold = get_all_arguments()
-    wav_data, sample_rate = analyze_wav_file(file_path)
+    file_path, block_size, shift_size, threshold = __get_all_arguments()
+    wav_data, sample_rate = __analyze_wav_file(file_path)
 
     start_time = time.time()
 
@@ -77,6 +77,5 @@ def main(analyze_method):
     print_run_time(run_time)
 
     # Ab hier soll nicht mehr die Zeit gemessen werden, da ich nur die Zeit fuer eine Fourieranalyse haben moechte
-    write_data_to_files(aggregated_fft, wav_data, sample_rate, block_size, threshold)
-
-    print_results(aggregated_fft, sample_rate, block_size, threshold)
+    __write_data_to_files(aggregated_fft, wav_data, sample_rate, block_size, threshold)
+    __print_results(aggregated_fft, sample_rate, block_size, threshold)
