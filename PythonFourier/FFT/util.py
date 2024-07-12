@@ -59,8 +59,6 @@ def print_run_time(run_time):
 
 
 def print_results(aggregated_fft, sample_rate, block_size, threshold):
-    #TODO: Die Ergebnisse der FFT koennte ich noch in eine Datei schreiben
-    #TODO: Refactoring
     result = [(index * sample_rate / block_size, aggregated_fft[index])
               for index in range(len(aggregated_fft)) if aggregated_fft[index] > threshold]
 
