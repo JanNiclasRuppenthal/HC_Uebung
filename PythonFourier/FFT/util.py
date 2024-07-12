@@ -2,6 +2,7 @@ import time
 import sys
 from scipy.io import wavfile
 
+
 def get_all_arguments():
     file_path = str(sys.argv[1])
     block_size = int(sys.argv[2])
@@ -42,6 +43,7 @@ def write_data_to_file(data, file_path):
     with open(file_path, 'w') as file:
         for item in data:
             file.write(str(item) + '\n')
+
 
 def write_data_to_files(aggregated_fft, wav_data, sample_rate, block_size, threshold):
     write_data_to_file([sample_rate, block_size, threshold], 'sr_bs_t.txt')
