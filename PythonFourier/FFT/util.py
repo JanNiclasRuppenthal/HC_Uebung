@@ -66,10 +66,10 @@ def print_results(aggregated_fft, sample_rate, block_size, threshold):
 
 
 def main(analyze_method):
-    start_time = time.time()
-
     file_path, block_size, shift_size, threshold = get_all_arguments()
     wav_data, sample_rate = analyze_wav_file(file_path)
+
+    start_time = time.time()
 
     aggregated_fft = analyze_method(wav_data, block_size, shift_size)
 
