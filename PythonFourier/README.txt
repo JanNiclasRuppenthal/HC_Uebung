@@ -64,8 +64,11 @@ Beispiele der Befehle, die auch fuer den Bericht zu den Audiodateien verwendet w
 <Dateiname> add 1 44100 400 800 1200
 <Dateiname> am 1 44100 440 600
 <Dateiname> fm 1 44100 440 600 2
+<Dateinname> segmented 1 44100 10 1000 0.5
 <Dateiname> envelope 1 44100 440
 <Dateiname> harmonics 1 44100 440 3
+<Dateiname> triangle 1 44100 440
+<Dateiname> rectangle 1 44100 440
 <Dateiname> chirp 1 44100 400 1200
 <Dateiname> noise 1 44100 
 

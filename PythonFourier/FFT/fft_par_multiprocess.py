@@ -6,12 +6,12 @@ import os
 import multiprocessing as mp
 
 
-def fft_process(id, lock, cpu_count, data, block_size, shift_size, aggregated_fft, result_shape):
-    local_fft = np.zeros(result_shape)
+def fft_process(id, lock, cpu_count, data, block_size, shift_size, aggregated_fft):
+    local_fft = np.zeros(block_size//2)
     for i in range(id * shift_size, len(data) - block_size + 1, cpu_count * shift_size):
         block = data[i:i+block_size]
         fft_result = np.fft.fft(block)
-        local_fft += np.abs(fft_result[:result_shape[0]])
+        local_fft += np.abs(fft_result[:block_size//2])
 
     '''
     Bei der Addition der Ergebnisse muss man darauf achten, dass man diese Operation synchronisiert, da es zu Fehler
@@ -19,7 +19,7 @@ def fft_process(id, lock, cpu_count, data, block_size, shift_size, aggregated_ff
     Ergebniss addiert.
     '''
     with lock:
-        for i in range(result_shape[0]):
+        for i in range(block_size//2):
             aggregated_fft[i] += local_fft[i]
 
 def analyze(data, block_size, shift_size):
@@ -34,10 +34,8 @@ def analyze(data, block_size, shift_size):
     # Gemeinsames Array, welches die Threads sich teilen
     aggregated_fft = mp.Array('d', block_size//2)
 
-    result_shape = (block_size//2,)
-
     for id in range(cpu_count):
-        process = mp.Process(target=fft_process, args=(id, lock, cpu_count, data, block_size, shift_size, aggregated_fft, result_shape))
+        process = mp.Process(target=fft_process, args=(id, lock, cpu_count, data, block_size, shift_size, aggregated_fft))
         processes.append(process)
         process.start()
 
