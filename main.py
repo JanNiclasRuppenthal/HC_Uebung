@@ -23,6 +23,7 @@ def setup_display(e_display):
     e_display.text("Raspberry Pi Pico W", 5, 10, 0x00)
     
     # date
+    # TODO: compute the real date because raspberry pi pico has no realtime clock
     date = RTC().datetime()
     weekday_number = date[3]
     weekday_str = weekday_str_list[weekday_number]
