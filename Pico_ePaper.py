@@ -490,10 +490,10 @@ class EPD_2in9_Landscape(framebuf.FrameBuffer):
         self.digital_write(self.cs_pin, 1)
         
     def ReadBusy(self):
-        print("e-Paper busy")
+        #print("e-Paper busy")
         while(self.digital_read(self.busy_pin) == 1):      #  0: idle, 1: busy
             self.delay_ms(10) 
-        print("e-Paper busy release")  
+        #print("e-Paper busy release")  
 
     def TurnOnDisplay(self):
         self.send_command(0x22) # DISPLAY_UPDATE_CONTROL_2

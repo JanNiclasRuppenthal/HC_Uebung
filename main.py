@@ -91,12 +91,13 @@ def main():
                 last_humi = humi
                 
             if (change):
+                #TODO: Blink the LED to indicate an update
                 e_display.display_Partial(e_display.buffer)
                 change = False
             
             # print the measure stats to the terminal
-            print(temp)
-            print(humi)
+            #output_str = "Temperature: {:.1f} \nHumidity: {:.1f}".format(temp, humi)
+            #print(output_str)
         except Exception as e:
             print('Got an exception: ' + str(e))
         time.sleep(2)
