@@ -3,7 +3,7 @@ import time
 from dht import DHT22
 from Pico_ePaper import EPD_2in9_Landscape
 from web_server import connect, open_socket, webpage
-import _thread
+import select
 
 weekday_str_list = [
     "Montag",
@@ -15,16 +15,17 @@ weekday_str_list = [
     "Sonntag"
 ]
 
+temp = 0
+humi = 0
 
 def setup_display(e_display):
     e_display.Clear(0xff)
     e_display.fill(0xff)
-    #title
+    # title
     e_display.text("Wetterstation", 5, 0, 0x00)
     e_display.text("Raspberry Pi Pico W", 5, 10, 0x00)
     
     # date
-    # TODO: compute the real date because raspberry pi pico has no realtime clock
     date = RTC().datetime()
     weekday_number = date[3]
     weekday_str = weekday_str_list[weekday_number]
@@ -43,7 +44,7 @@ def setup_display(e_display):
     e_display.text("     %", 120, 75, 0x00)
     
     # static ip address
-    ip_str = "IP Adresse: 192.168.178.114"
+    ip_str = "IP Adresse: "
     e_display.text(ip_str, 5, 121, 0x00)
     
     # owner
@@ -56,37 +57,28 @@ def setup_display(e_display):
     
     # show result on display
     e_display.display(e_display.buffer)
-    
-    
-temp = 0
-humi = 0
 
-
-def run_server():
-    global temp
-    global humi
-
+def run_server(connection):
+    global temp, humi
     try:
-        ip = connect()
-        connection = open_socket(ip)
-    except KeyboardInterrupt:
-        machine.reset()
-    
-    try:
-        while True:
-            client = connection.accept()[0]
+        ready_to_read, _, _ = select.select([connection], [], [], 1)
+        if ready_to_read:
+            client, _ = connection.accept()
+            request = client.recv(1024)  # Receive the request data
+            #request = str(request)
+            #print("Request:", request)
+            
             html = webpage(temp, humi)
-            client.send(html)
+            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html
+            client.send(response)
             client.close()
     except Exception as e:
+        print('Got an exception in run_server: ' + str(e))
         machine.reset()
-    
+
 def main():
-    global temp
-    global humi
-    
-    #_thread.start_new_thread(run_server, ())
-    
+    global temp, humi
+
     # initialize DHT22 sensor
     dht22_sensor = DHT22(Pin(0, Pin.IN, Pin.PULL_UP))
     led = Pin("LED", Pin.OUT)
@@ -96,6 +88,17 @@ def main():
     last_temp = -1
     last_humi = -1
     change = False
+
+    try:
+        ip = connect()
+        connection = open_socket(ip)
+    except KeyboardInterrupt:
+        machine.reset()
+        
+    led.on()
+    e_display.text(ip, 100, 121, 0x00)
+    e_display.display_Partial(e_display.buffer)
+    led.off()
     
     while True:
         try:
@@ -104,7 +107,7 @@ def main():
             temp = dht22_sensor.temperature()
             humi = dht22_sensor.humidity()
             
-            if (not last_temp == temp):
+            if last_temp != temp:
                 temp_str = "{:.1f}".format(temp)
                 e_display.fill_rect(120, 50, 35, 10, 0xff)
                 e_display.text(temp_str, 120, 50, 0x00)
@@ -112,7 +115,7 @@ def main():
                 change = True
                 last_temp = temp
                 
-            if (not last_humi == humi):
+            if last_humi != humi:
                 humi_str = "{:.1f}".format(humi)
                 e_display.fill_rect(120, 75, 35, 10, 0xff)
                 e_display.text(humi_str, 120, 75, 0x00)
@@ -120,16 +123,18 @@ def main():
                 change = True
                 last_humi = humi
                 
-            if (change):
+            if change:
                 led.on()
                 e_display.display_Partial(e_display.buffer)
                 change = False
                 led.off()
             
+            # Handle web server
+            run_server(connection)
+            
         except Exception as e:
             print('Got an exception: ' + str(e))
-        time.sleep(2)    
-    
+        time.sleep(2)
 
 if __name__=='__main__':
     main()
