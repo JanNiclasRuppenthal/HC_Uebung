@@ -36,7 +36,12 @@ def webpage(temperature, humidity):
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
 </head>
 <body style="background-color:#121212EE;">
-    <h1 style="text-align: center; color: orange">Temperatur</h1>
+    <h1 style="text-align: center; color: white">Wetterdaten</h1>
+    <h2 style="
+            text-align: center; 
+            margin-top: 5%; 
+            margin-bottom: 5%;
+            color: orange">Temperatur</h2>
     <div style="
             border: 1px solid #000000;
             background-color: aqua;
@@ -49,7 +54,11 @@ def webpage(temperature, humidity):
             ">
         <p style="font-size:200%"><b>{temperature}°C</b></p>
     </div>
-    <h1 style="text-align: center; color: orange">Feuchtigkeit</h1>
+    <h2 style="
+            text-align: center; 
+            margin-top: 5%; 
+            margin-bottom: 5%;
+            color: orange">Feuchtigkeit</h2>
     <div style="
             border: 1px solid #000000;
             background-color: aqua;
@@ -62,11 +71,37 @@ def webpage(temperature, humidity):
             ">
         <p style="font-size:200%"><b>{humidity}%</b></p>
     </div>
-    <div id="output" style="
-              max-width: fit-content;
-              margin-left: auto;
-              margin-right: auto;">
+    <hr style="
+            border-top: 3px solid darkviolet; 
+            margin-top: 5%; 
+            margin-bottom: 5%;">
+    <h1 style="text-align: center; color: white">Daten der letzten 24 Stunden</h1>
+    <h2 style="
+            text-align: center; 
+            margin-top: 5%; 
+            margin-bottom: 5%;
+            color: orange">Temperatur</h2>
+    <div id="output_temp" style="
+            max-width: fit-content;
+            margin-left: auto;
+            margin-right: auto; 
+            color: white";>Generiere ein Diagramm der letzten 24 Stunden...
     </div>
+    <h2 style="
+            text-align: center; 
+            margin-top: 5%; 
+            margin-bottom: 5%;
+            color: orange">Feuchtigkeit</h2>
+    <div id="output_humi" style="
+            max-width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            color: white;">Generiere ein Diagramm der letzten 24 Stunden...
+    </div>
+    <hr style="
+            border-top: 3px solid darkviolet; 
+            margin-top: 5%; 
+            margin-bottom: 5%;">
     <py-script>
         import micropip
         import asyncio
@@ -74,6 +109,7 @@ def webpage(temperature, humidity):
         async def main():
             await micropip.install('matplotlib')
             await micropip.install('numpy')
+            
             import matplotlib.pyplot as plt
             import numpy as np
 
@@ -91,7 +127,8 @@ def webpage(temperature, humidity):
             import pyscript
 
             # Canvas-Element anpassen
-            pyscript.write('output', fig)
+            pyscript.write('output_temp', fig)
+            pyscript.write('output_humi', fig)
 
         asyncio.ensure_future(main())
     </py-script>
