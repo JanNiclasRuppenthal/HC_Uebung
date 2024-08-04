@@ -1,5 +1,6 @@
 from machine import Pin, RTC
 import time
+import ntptime
 from dht import DHT22
 from Pico_ePaper import EPD_2in9_Landscape
 from web_server import connect, open_socket, webpage
@@ -82,18 +83,20 @@ def main():
     # initialize DHT22 sensor
     dht22_sensor = DHT22(Pin(0, Pin.IN, Pin.PULL_UP))
     led = Pin("LED", Pin.OUT)
-    
-    e_display = EPD_2in9_Landscape()
-    setup_display(e_display)
-    last_temp = -1
-    last_humi = -1
-    change = False
 
     try:
         ip = connect()
         connection = open_socket(ip)
     except KeyboardInterrupt:
         machine.reset()
+        
+    ntptime.settime()
+    
+    e_display = EPD_2in9_Landscape()
+    setup_display(e_display)
+    last_temp = -1
+    last_humi = -1
+    change = False
         
     led.on()
     e_display.text(ip, 100, 121, 0x00)

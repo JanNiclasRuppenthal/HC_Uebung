@@ -63,7 +63,9 @@ def webpage(temperature, humidity):
         <p style="font-size:200%"><b>{humidity}%</b></p>
     </div>
     <div id="output" style="
-            padding: 20px;">
+              max-width: fit-content;
+              margin-left: auto;
+              margin-right: auto;">
     </div>
     <py-script>
         import micropip
