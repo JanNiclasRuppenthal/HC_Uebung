@@ -24,7 +24,7 @@ def open_socket(ip):
     return connection
     
 
-def webpage(temperature, humidity):
+def webpage(temperature, humidity, temp_queue, humi_queue, hour):
     html = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -114,21 +114,30 @@ def webpage(temperature, humidity):
             import numpy as np
 
             # Daten generieren
-            x = np.linspace(0, 10, 100)
-            y = np.sin(x)
+            x = np.linspace({hour}, {hour}+24, 144)
 
             # Plot erstellen
-            fig, ax = plt.subplots(figsize=(4, 4))
-            ax.plot(x, y)
-            ax.set(title='Sinusfunktion', xlabel='x', ylabel='sin(x)')
+            fig_temp, ax = plt.subplots(figsize=(4, 4))
+            ax.plot(x, {temp_queue})
+            labels = [int((z % 24)) for z in ax.get_xticks()]
+            ax.set_xticks(ax.get_xticks())
+            ax.set_xticklabels([int((z % 24)) for z in ax.get_xticks()])
+            ax.set(title='Temperatur', xlabel='Uhrzeit', ylabel='°C')
+
+            fig_humi, ax = plt.subplots(figsize=(4, 4))
+            ax.plot(x, {humi_queue})
+            labels = [int((z % 24)) for z in ax.get_xticks()]
+            ax.set_xticks(ax.get_xticks())
+            ax.set_xticklabels([int((z % 24)) for z in ax.get_xticks()])
+            ax.set(title='Feuchtigkeit', xlabel='Uhrzeit', ylabel='%')
 
             # Plot im HTML-Dokument anzeigen
             from js import document
             import pyscript
 
             # Canvas-Element anpassen
-            pyscript.write('output_temp', fig)
-            pyscript.write('output_humi', fig)
+            pyscript.write('output_temp', fig_temp)
+            pyscript.write('output_humi', fig_humi)
 
         asyncio.ensure_future(main())
     </py-script>

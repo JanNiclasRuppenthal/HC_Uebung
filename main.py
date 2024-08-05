@@ -17,8 +17,13 @@ weekday_str_list = [
     "Sonntag"
 ]
 
+UPDATE_RATE = 10
+
 temp = 0
 humi = 0
+temp_queue = [0] * ((60//UPDATE_RATE) * 24)
+humi_queue = [0] * ((60//UPDATE_RATE) * 24)
+hour = 0
 
 def is_summertime(t):
     year = t[0]
@@ -74,7 +79,7 @@ def setup_display(e_display):
 
 
 def run_server(connection):
-    global temp, humi
+    global temp, humi, temp_queue, humi_queue, hour
     while True:
         try:
             ready_to_read, _, _ = select.select([connection], [], [], 1)
@@ -82,7 +87,7 @@ def run_server(connection):
                 client, _ = connection.accept()
                 request = client.recv(1024)  # Receive the request data
                 
-                html = webpage(temp, humi)
+                html = webpage(temp, humi, temp_queue, humi_queue, hour)
                 response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html
                 client.send(response)
                 client.close()
@@ -94,7 +99,7 @@ def run_server(connection):
 
 
 def main():
-    global temp, humi
+    global temp, humi, temp_queue, humi_queue, hour
 
     # initialize DHT22 sensor
     dht22_sensor = DHT22(Pin(0, Pin.IN, Pin.PULL_UP))
@@ -112,6 +117,7 @@ def main():
     last_humi = -1
     last_weekday_number = -1
     change = False
+    count = -1
     
     
     # date
@@ -133,54 +139,62 @@ def main():
     _thread.start_new_thread(run_server, (connection,))
     
     while True:
-        try:
-            
-            #TODO: do not do this every two seconds
-            date = time.localtime(time.time() + UTC_OFFSET)
-            weekday_number = date[6]
-            
-            if last_weekday_number != weekday_number:
-                weekday_str = weekday_str_list[weekday_number]
-                e_display.text(weekday_str, 210, 0, 0x00)
-                date_str = "{:02d}.{:02d}.{:d}".format(date[2], date[1], date[0])
-                e_display.text(date_str, 210, 10, 0x00)
-                change = True
+        
+        if (count == -1 or UPDATE_RATE * 60):
+            count = 0
+        
+            try:
+                date = time.localtime(time.time() + UTC_OFFSET)
+                weekday_number = date[6]
+                hour = date[3]
                 
-                last_weekday_number = weekday_number
-            
-            #TODO: DO not do this every two seconds
-            # begin measure
-            dht22_sensor.measure()
-            temp = dht22_sensor.temperature()
-            humi = dht22_sensor.humidity()
-            
-            if last_temp != temp:
-                temp_str = "{:.1f}".format(temp)
-                e_display.fill_rect(120, 50, 35, 10, 0xff)
-                e_display.text(temp_str, 120, 50, 0x00)
+                if last_weekday_number != weekday_number:
+                    weekday_str = weekday_str_list[weekday_number]
+                    e_display.text(weekday_str, 210, 0, 0x00)
+                    date_str = "{:02d}.{:02d}.{:d}".format(date[2], date[1], date[0])
+                    e_display.text(date_str, 210, 10, 0x00)
+                    change = True
+                    
+                    last_weekday_number = weekday_number
                 
-                change = True
-                last_temp = temp
+                # begin measure
+                dht22_sensor.measure()
+                temp = dht22_sensor.temperature()
+                humi = dht22_sensor.humidity()
                 
-            if last_humi != humi:
-                humi_str = "{:.1f}".format(humi)
-                e_display.fill_rect(120, 75, 35, 10, 0xff)
-                e_display.text(humi_str, 120, 75, 0x00)
+                temp_queue.pop(0)
+                temp_queue.append(temp)
+                humi_queue.pop(0)
+                humi_queue.append(humi)
                 
-                change = True
-                last_humi = humi
+                if last_temp != temp:
+                    temp_str = "{:.1f}".format(temp)
+                    e_display.fill_rect(120, 50, 35, 10, 0xff)
+                    e_display.text(temp_str, 120, 50, 0x00)
+                    
+                    change = True
+                    last_temp = temp
+                    
+                if last_humi != humi:
+                    humi_str = "{:.1f}".format(humi)
+                    e_display.fill_rect(120, 75, 35, 10, 0xff)
+                    e_display.text(humi_str, 120, 75, 0x00)
+                    
+                    change = True
+                    last_humi = humi
+                    
+                if change:
+                    led.on()
+                    e_display.display_Partial(e_display.buffer)
+                    change = False
+                    led.off()
+        
+            except Exception as e:
+                print('Got an exception in main: ' + str(e))
+                time.sleep(2)
                 
-            if change:
-                led.on()
-                e_display.display_Partial(e_display.buffer)
-                change = False
-                led.off()
-            
-            time.sleep(2)
-
-        except Exception as e:
-            print('Got an exception in main: ' + str(e))
-            time.sleep(2)
+        time.sleep(0.1)
+        count += 0.1
 
 if __name__ == '__main__':
     main()
