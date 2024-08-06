@@ -2,7 +2,13 @@ import network
 import socket
 from time import sleep
 import machine
-from wifi_configuration import ssid, password
+from wifi.wifi_configuration import ssid, password
+
+def connect_to_wifi():
+    ip = connect()
+    connection = open_socket(ip)
+    return connection, ip
+    
 
 def connect():
     wlan = network.WLAN(network.STA_IF)
