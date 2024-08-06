@@ -5,7 +5,6 @@ from dht import DHT22
 from Pico_ePaper import EPD_2in9_Landscape
 from web_server import connect, open_socket, webpage
 import select
-import _thread
 
 weekday_str_list = [
     "Montag",
@@ -17,12 +16,12 @@ weekday_str_list = [
     "Sonntag"
 ]
 
-UPDATE_RATE = 10
+UPDATE_RATE = 5
 
 temp = 0
 humi = 0
-temp_queue = [0] * ((60//UPDATE_RATE) * 24)
-humi_queue = [0] * ((60//UPDATE_RATE) * 24)
+temp_queue = [0] * ((60 // UPDATE_RATE) * 24)
+humi_queue = [0] * ((60 // UPDATE_RATE) * 24)
 hour = 0
 
 def is_summertime(t):
@@ -76,26 +75,30 @@ def setup_display(e_display):
     
     # show result on display
     e_display.display(e_display.buffer)
+    
 
+def mark_exception_on_display(e_display):
+    e_display.line(250, 70, 276, 70, 0x00)
+    e_display.line(250, 70, 264, 50, 0x00)
+    e_display.line(276, 70, 264, 50, 0x00)
+    e_display.text("!", 260, 60, 0x00)
+    e_display.display_Partial(e_display.buffer)
 
 def run_server(connection):
     global temp, humi, temp_queue, humi_queue, hour
-    while True:
-        try:
-            ready_to_read, _, _ = select.select([connection], [], [], 1)
-            if ready_to_read:
-                client, _ = connection.accept()
-                request = client.recv(1024)  # Receive the request data
-                
-                html = webpage(temp, humi, temp_queue, humi_queue, hour)
-                response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html
-                client.send(response)
-                client.close()
-        except Exception as e:
-            print('Got an exception in run_server: ' + str(e))
-            machine.reset()
-        
-        time.sleep(0.1)
+    try:
+        ready_to_read, _, _ = select.select([connection], [], [], 1)
+        if ready_to_read:
+            client, _ = connection.accept()
+            request = client.recv(1024)  # Receive the request data
+            
+            html = webpage(temp, humi, temp_queue, humi_queue, hour)
+            response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html
+            client.send(response)
+            client.close()
+    except Exception as e:
+        mark_exception_on_display(e_display)
+        machine.reset()
 
 
 def main():
@@ -135,12 +138,11 @@ def main():
     e_display.display_Partial(e_display.buffer)
     led.off()
     
-    # Start the server thread
-    _thread.start_new_thread(run_server, (connection,))
-    
     while True:
         
-        if (count == -1 or UPDATE_RATE * 60):
+        run_server(connection)
+        
+        if (count == -1 or count >= 1): #UPDATE_RATE * 60):
             count = 0
         
             try:
@@ -190,7 +192,7 @@ def main():
                     led.off()
         
             except Exception as e:
-                print('Got an exception in main: ' + str(e))
+                mark_exception_on_display(e_display)
                 time.sleep(2)
                 
         time.sleep(0.1)

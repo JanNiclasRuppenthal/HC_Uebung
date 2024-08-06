@@ -114,7 +114,7 @@ def webpage(temperature, humidity, temp_queue, humi_queue, hour):
             import numpy as np
 
             # Daten generieren
-            x = np.linspace({hour}, {hour}+24, 144)
+            x = np.linspace({hour}, {hour}+24, 288)
 
             # Plot erstellen
             fig_temp, ax = plt.subplots(figsize=(4, 4))
