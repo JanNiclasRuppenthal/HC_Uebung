@@ -13,6 +13,7 @@ def connect_to_wifi():
 def connect():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
+    wlan.config(pm = 0xa11140)
     wlan.connect(ssid, password)
     while not wlan.isconnected():
         print('Waiting for a connection to the wifi')
@@ -120,7 +121,7 @@ def webpage(temperature, humidity, temp_queue, humi_queue, hour):
             import numpy as np
 
             # Daten generieren
-            x = np.linspace({hour}, {hour}+24, 288)
+            x = np.linspace({hour}, {hour}+24, 144)
 
             # Plot erstellen
             fig_temp, ax = plt.subplots(figsize=(4, 4))

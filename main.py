@@ -6,7 +6,7 @@ from wifi.web_server import connect_to_wifi, webpage
 from util.config_date import *
 from util.measurements import *
 
-UPDATE_RATE = 5
+UPDATE_RATE = 10
 temp = 0
 humi = 0
 temp_queue = [0] * ((60 // UPDATE_RATE) * 24)
@@ -116,8 +116,8 @@ def main():
                 print(f"Exception in main: {e}")
                 time.sleep(2)
                 
-        time.sleep(0.1)
-        count += 0.1
+        time.sleep(1)
+        count += 1
         
         run_server(connection)
 
