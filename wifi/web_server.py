@@ -31,7 +31,7 @@ def open_socket(ip):
     return connection
     
 
-def webpage(temperature, humidity, temp_queue, humi_queue, hour):
+def webpage(temperature, humidity, temp_queue, humi_queue):
     html = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -112,31 +112,40 @@ def webpage(temperature, humidity, temp_queue, humi_queue, hour):
     <py-script>
         import micropip
         import asyncio
+        import time
 
         async def main():
             await micropip.install('matplotlib')
             await micropip.install('numpy')
             
             import matplotlib.pyplot as plt
+            from matplotlib.ticker import FormatStrFormatter
             import numpy as np
 
             # Daten generieren
-            x = np.linspace({hour}, {hour}+24, 144)
+            hour = time.localtime()[3]
+            x = np.linspace(hour, hour+24, 144)
+            
+            plt.tight_layout()
 
             # Plot erstellen
             fig_temp, ax = plt.subplots(figsize=(4, 4))
             ax.plot(x, {temp_queue})
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+            
             labels = [int((z % 24)) for z in ax.get_xticks()]
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels([int((z % 24)) for z in ax.get_xticks()])
-            ax.set(title='Temperatur', xlabel='Uhrzeit', ylabel='°C')
+            ax.set(title='Temperatur', xlabel='Stunden', ylabel='°C')
 
             fig_humi, ax = plt.subplots(figsize=(4, 4))
             ax.plot(x, {humi_queue})
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+            
             labels = [int((z % 24)) for z in ax.get_xticks()]
             ax.set_xticks(ax.get_xticks())
             ax.set_xticklabels([int((z % 24)) for z in ax.get_xticks()])
-            ax.set(title='Feuchtigkeit', xlabel='Uhrzeit', ylabel='%')
+            ax.set(title='Feuchtigkeit', xlabel='Stunden', ylabel='%')
 
             # Plot im HTML-Dokument anzeigen
             from js import document

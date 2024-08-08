@@ -56,6 +56,8 @@ def add_IP(ip):
 def update_date_on_display(weekday_number, date):
     global e_display
     
+    e_display.fill_rect(210, 0, 86, 18, 0xff)
+    
     weekday_str = weekday_str_list[weekday_number]
     e_display.text(weekday_str, 210, 0, 0x00)
     date_str = "{:02d}.{:02d}.{:d}".format(date[2], date[1], date[0])
@@ -65,14 +67,14 @@ def update_date_on_display(weekday_number, date):
 def set_temperature_to_buffer(temp):
     global e_display
     
-    temp_str = "{:.1f}".format(temp)
+    temp_str = "{:f}".format(temp)
     e_display.fill_rect(120, 50, 35, 10, 0xff)
     e_display.text(temp_str, 120, 50, 0x00)
     
 def set_humidity_to_buffer(humi):
     global e_display
     
-    humi_str = "{:.1f}".format(humi)
+    humi_str = "{:f}".format(humi)
     e_display.fill_rect(120, 75, 35, 10, 0xff)
     e_display.text(humi_str, 120, 75, 0x00)
     
