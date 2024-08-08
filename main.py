@@ -96,7 +96,7 @@ def main():
     set_date_time_NTP()
     UTC_OFFSET = -1
     
-    add_IP(ip)
+    add_IP_to_display(ip)
     
     
     while True:
@@ -105,7 +105,6 @@ def main():
             count = 0
         
             try:
-                # Differantiate between Summer and Winter time in Germany
                 UTC_OFFSET = calculate_UTC_offset(time.localtime())
                 last_week_day_number = update_date_values(UTC_OFFSET, last_weekday_number)
                     

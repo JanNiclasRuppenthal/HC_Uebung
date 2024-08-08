@@ -47,7 +47,7 @@ def mark_exception_on_display():
     e_display.text("!", 260, 60, 0x00)
     update_display()
     
-def add_IP(ip):
+def add_IP_to_display(ip):
     global e_display
     
     e_display.text(ip, 100, 121, 0x00)

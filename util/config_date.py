@@ -35,6 +35,8 @@ def set_date_time_NTP():
 
 def calculate_UTC_offset(time):
     UTC_OFFSET = -1
+    
+    # Differantiate between Summer and Winter time in Germany
     if is_summertime(time):
         UTC_OFFSET = 2 * 60 * 60 
     else:
