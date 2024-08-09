@@ -16,11 +16,13 @@ def setup_display():
     temp_str = "Temperatur: "
     e_display.text(temp_str, 5, 50, 0x00)
     e_display.text("     Grad", 120, 50, 0x00)
+    e_display.text("     Grad", 220, 25, 0x00)
     
     # humidity
     hum_str = "Feuchtigkeit: "
     e_display.text(hum_str, 5, 75, 0x00)
     e_display.text("     %", 120, 75, 0x00)
+    e_display.text("     %", 220, 50, 0x00)
     
     # static ip address
     ip_str = "IP Adresse: "
@@ -33,6 +35,7 @@ def setup_display():
     # lines
     e_display.hline(0, 20, 296, 0x00)
     e_display.hline(0, 115, 296, 0x00)
+    e_display.vline(210, 20, 95, 0x00)
     
     # show result on display
     e_display.display(e_display.buffer)
@@ -40,6 +43,9 @@ def setup_display():
 
 def mark_exception_on_display():
     global e_display
+    
+    e_display.Clear(0xff)
+    e_display.fill(0xff)
     
     e_display.line(250, 70, 276, 70, 0x00)
     e_display.line(250, 70, 264, 50, 0x00)
@@ -64,19 +70,16 @@ def update_date_on_display(weekday_number, date):
     e_display.text(date_str, 210, 10, 0x00)
     update_display()
     
-def set_temperature_to_buffer(temp):
+def set_value_to_buffer(value, x, y, float_number=True):
     global e_display
     
-    temp_str = "{:f}".format(temp)
-    e_display.fill_rect(120, 50, 35, 10, 0xff)
-    e_display.text(temp_str, 120, 50, 0x00)
-    
-def set_humidity_to_buffer(humi):
-    global e_display
-    
-    humi_str = "{:f}".format(humi)
-    e_display.fill_rect(120, 75, 35, 10, 0xff)
-    e_display.text(humi_str, 120, 75, 0x00)
+    value_str = ""
+    if (float_number):
+        value_str = "{:.1f}".format(value)
+    else:
+        value_str = "{:.0f}".format(value)
+    e_display.fill_rect(x, y, 35, 10, 0xff)
+    e_display.text(value_str, x, y, 0x00)
     
     
 def update_display():

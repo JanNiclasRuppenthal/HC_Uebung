@@ -1,26 +1,38 @@
 import time
 import select
+import socket
 
 from display.config_display import *
 from wifi.web_server import connect_to_wifi, webpage
 from util.config_date import *
 from util.measurements import *
+from wifi.http_request import get_outdoor_sensor_value
+from wifi_configuration import server_ip
 
 UPDATE_RATE = 10
+
+# indoor
 temp_value = 0
 humi_value = 0
 temp_queue = [0] * ((60 // UPDATE_RATE) * 24)
 humi_queue = [0] * ((60 // UPDATE_RATE) * 24)
-hour = 0
+
+# outdoor
+temp_outdoor_value = 0
+humi_outdoor_value = 0
+rain_outdoor_value = 0
+light_outdoor_value = 0
+
 
 def run_server(connection):
-    global temp_value, humi_value, temp_queue, humi_queue
+    global temp_value, humi_value
+    global temp_queue, humi_queue
     
     try:
         ready_to_read, _, _ = select.select([connection], [], [], 1)
         if ready_to_read:
             client, _ = connection.accept()
-            request = client.recv(1024)  # Receive the request data
+            request = client.recv(1024) 
             
             html = webpage(temp_value, humi_value, temp_queue, humi_queue)
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html
@@ -40,9 +52,12 @@ def update_date_values(UTC_OFFSET, last_weekday_number):
         
     return last_weekday_number
         
-def update_measure_values(last_temp, last_humi):
-    global temp_value, humi_value, temp_queue, humi_queue
+def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor):
+    global temp_value, humi_value
+    global temp_queue, humi_queue
+    global temp_outdoor_value, rain_outdoor_value, light_outdoor_value
     
+    # indoor
     temp, humi = measure()
     
     temp_value = round(temp, 1)
@@ -53,18 +68,44 @@ def update_measure_values(last_temp, last_humi):
     humi_queue.pop(0)
     humi_queue.append(humi)
     
+    # outdoor
+    #TODO: Delete the default value if the sensor is delivered
+    temp_outdoor_value = 0 #get_outdoor_sensor_value('/temp_value')
+    humi_outdoor_value = 0 #get_outdoor_sensor_value('/humi_value')
+    rain_outdoor_value = get_outdoor_sensor_value('/rain_value')
+    light_outdoor_value = get_outdoor_sensor_value('/light_value')
+    
     change = False
     
     if last_temp != temp_value:
-        set_temperature_to_buffer(temp_value)
-        
+        set_value_to_buffer(temp_value, 120, 50)
         change = True
         last_temp = temp_value
         
     if last_humi != humi_value:
-        set_humidity_to_buffer(humi_value)
+        set_value_to_buffer(humi_value, 120, 75)
         change = True
         last_humi = humi_value
+        
+    if last_temp_outdoor != temp_outdoor_value:
+        set_value_to_buffer(temp_outdoor_value, 220, 25)
+        change = True
+        last_temp_outdoor = temp_outdoor_value
+        
+    if last_humi_outdoor != humi_outdoor_value:
+        set_value_to_buffer(temp_outdoor_value, 220, 50)
+        change = True
+        last_temp_outdoor = temp_outdoor_value
+        
+    if last_rain_outdoor != rain_outdoor_value:
+        set_value_to_buffer(rain_outdoor_value, 220, 75, False)
+        change = True
+        last_rain_outdoor = rain_outdoor_value
+        
+    if last_light_outdoor != light_outdoor_value:
+        set_value_to_buffer(light_outdoor_value, 220, 100, False)
+        change = True
+        last_light_outdoor = light_outdoor_value
         
     if change:
         get_led().on()
@@ -72,8 +113,7 @@ def update_measure_values(last_temp, last_humi):
         change = False
         get_led().off()
         
-    return last_temp, last_humi
-
+    return last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor
 
 def main():
     initialize_sensors()
@@ -89,7 +129,12 @@ def main():
     last_temp = -1
     last_humi = -1
     last_weekday_number = -1
-    change = False
+    
+    last_temp_outdoor = -1
+    last_humi_outdoor = -1
+    last_rain_outdoor = -1
+    last_light_outdoor = -1
+    
     count = -1
     
     # date
@@ -108,7 +153,7 @@ def main():
                 UTC_OFFSET = calculate_UTC_offset(time.localtime())
                 last_week_day_number = update_date_values(UTC_OFFSET, last_weekday_number)
                     
-                last_temp, last_humi = update_measure_values(last_temp, last_humi)
+                last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor = update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor)
                 
             except Exception as e:
                 mark_exception_on_display()
