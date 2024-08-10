@@ -1,7 +1,6 @@
 import socket
 from wifi_configuration import server_ip
 
-# Funktion zum Abrufen von Daten
 def get_outdoor_sensor_value(request):
     addr = (server_ip, 80)
     s = socket.socket()

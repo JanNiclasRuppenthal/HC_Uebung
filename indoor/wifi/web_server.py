@@ -13,7 +13,6 @@ def connect_to_wifi():
 def connect():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    wlan.config(pm = 0xa11140)
     wlan.connect(ssid, password)
     while not wlan.isconnected():
         print('Waiting for a connection to the wifi')
@@ -44,7 +43,7 @@ def webpage(temp_value, humi_value, temp_queue, humi_queue):
     </head>
     <body style="background-color:#121212EE;">
 
-        <h1 style="text-align: center; color: white">Wetterdaten - Innerhalb</h1>
+        <h1 style="text-align: center; color: white">Wetterdaten</h1>
         <h2 style="
                 text-align: center; 
                 margin-top: 5%; 
@@ -86,7 +85,7 @@ def webpage(temp_value, humi_value, temp_queue, humi_queue):
 
 
         
-        <h1 style="text-align: center; color: white">Daten der letzten 24 Stunden - Innerhalb</h1>
+        <h1 style="text-align: center; color: white">Daten der letzten 24 Stunden</h1>
         <h2 style="
                 text-align: center; 
                 margin-top: 5%; 
