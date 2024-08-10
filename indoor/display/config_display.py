@@ -8,6 +8,7 @@ def setup_display():
     
     e_display.Clear(0xff)
     e_display.fill(0xff)
+    
     # title
     e_display.text("Wetterstation", 5, 0, 0x00)
     e_display.text("Raspberry Pi Pico W", 5, 10, 0x00)
@@ -22,7 +23,10 @@ def setup_display():
     hum_str = "Feuchtigkeit: "
     e_display.text(hum_str, 5, 75, 0x00)
     e_display.text("     %", 120, 75, 0x00)
+    
+    # outdoor values
     e_display.text("     %", 220, 50, 0x00)
+    e_display.text("     %", 220, 75, 0x00)
     
     # static ip address
     ip_str = "IP Adresse: "

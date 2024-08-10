@@ -1,5 +1,5 @@
 import socket
-from wifi_configuration import server_ip
+from wifi.wifi_configuration import server_ip
 
 def get_outdoor_sensor_value(request):
     addr = (server_ip, 80)
@@ -14,6 +14,6 @@ def get_outdoor_sensor_value(request):
     
     response_str = response_bytes.decode('utf-8')
     index_to_value = response_str.rfind('\n') + 1
-    value = int(response_str[index_to_value:])
+    value = round(float((response_str[index_to_value:])), 1)
     
     return value

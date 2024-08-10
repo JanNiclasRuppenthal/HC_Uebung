@@ -2,7 +2,7 @@ import network
 import socket
 from time import sleep
 import machine
-from wifi_configuration import ssid, password
+from wifi.wifi_configuration import ssid, password
 
 def connect_to_wifi():
     ip = connect()
@@ -30,7 +30,7 @@ def open_socket(ip):
     return connection
     
 
-def webpage(temp_value, humi_value, temp_queue, humi_queue):
+def webpage_indoor(temp_value, humi_value, temp_queue, humi_queue):
     html = f"""
 <!DOCTYPE html>
 <html lang="de">
@@ -150,5 +150,95 @@ def webpage(temp_value, humi_value, temp_queue, humi_queue):
     </body>
 </html>
 
+            """
+    return str(html)
+
+
+def webpage_outdoor(temp_value, humi_value, light_value, rain_value):
+    html = f"""
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Wetterstation Raspberry Pi Pico W</title>
+    </head>
+    <body style="background-color:#121212EE;">
+
+        <h1 style="text-align: center; color: white">Wetterdaten</h1>
+        <h2 style="
+                text-align: center; 
+                margin-top: 5%; 
+                margin-bottom: 5%;
+                color: orange">Temperatur</h2>
+        <div style="
+                border: 1px solid #000000;
+                background-color: aqua;
+                padding: 5%;
+                margin: 20px auto;
+                width: 50%;
+                text-align: center;
+                border-radius: 12px;
+                box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+                ">
+                <p style="font-size:200%"><b>{temp_value}°C</b></p>
+        </div>
+        <h2 style="
+                text-align: center; 
+                margin-top: 5%; 
+                margin-bottom: 5%;
+                color: orange">Feuchtigkeit</h2>
+        <div style="
+                border: 1px solid #000000;
+                background-color: aqua;
+                padding: 5%;
+                margin: 20px auto;
+                width: 50%;
+                text-align: center;
+                border-radius: 12px;
+                box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+                ">
+                <p style="font-size:200%"><b>{humi_value}%</b></p>
+        </div>
+        <h2 style="
+                text-align: center; 
+                margin-top: 5%; 
+                margin-bottom: 5%;
+                color: orange">Lichtintensität</h2>
+        <div style="
+                border: 1px solid #000000;
+                background-color: aqua;
+                padding: 5%;
+                margin: 20px auto;
+                width: 50%;
+                text-align: center;
+                border-radius: 12px;
+                box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+                ">
+                <p style="font-size:200%"><b>{light_value}%</b></p>
+        </div>
+        <h2 style="
+                text-align: center; 
+                margin-top: 5%; 
+                margin-bottom: 5%;
+                color: orange">Regen</h2>
+        <div style="
+                border: 1px solid #000000;
+                background-color: aqua;
+                padding: 5%;
+                margin: 20px auto;
+                width: 50%;
+                text-align: center;
+                border-radius: 12px;
+                box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+                ">
+                <p style="font-size:200%"><b>{rain_value}</b></p>
+        </div>
+        <hr style="
+                border-top: 3px solid darkviolet; 
+                margin-top: 5%; 
+                margin-bottom: 5%;">
+    </body>
+</html>
             """
     return str(html)

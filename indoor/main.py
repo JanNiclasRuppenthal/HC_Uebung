@@ -1,13 +1,12 @@
 import time
 import select
-import socket
 
 from display.config_display import *
-from wifi.web_server import connect_to_wifi, webpage
+from wifi.web_server import *
 from util.config_date import *
 from util.measurements import *
 from wifi.http_request import get_outdoor_sensor_value
-from wifi_configuration import server_ip
+from wifi.wifi_configuration import server_ip
 
 UPDATE_RATE = 10
 
@@ -34,7 +33,7 @@ def run_server(connection):
             client, _ = connection.accept()
             request = client.recv(1024) 
             
-            html = webpage(temp_value, humi_value, temp_queue, humi_queue)
+            html = webpage_indoor(temp_value, humi_value, temp_queue, humi_queue)
             response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + html
             client.send(response)
             client.close()
@@ -69,9 +68,8 @@ def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_out
     humi_queue.append(humi)
     
     # outdoor
-    #TODO: Delete the default value if the sensor is delivered
-    temp_outdoor_value = 0 #get_outdoor_sensor_value('/temp_value')
-    humi_outdoor_value = 0 #get_outdoor_sensor_value('/humi_value')
+    temp_outdoor_value = get_outdoor_sensor_value('/temp_value')
+    humi_outdoor_value = get_outdoor_sensor_value('/humi_value')
     rain_outdoor_value = get_outdoor_sensor_value('/rain_value')
     light_outdoor_value = get_outdoor_sensor_value('/light_value')
     
@@ -87,25 +85,26 @@ def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_out
         change = True
         last_humi = humi_value
         
-    if last_temp_outdoor != temp_outdoor_value:
+    #TODO: Change the condition after the sensor is installed
+    if last_temp_outdoor != 0: #temp_outdoor_value:
         set_value_to_buffer(temp_outdoor_value, 220, 25)
         change = True
         last_temp_outdoor = temp_outdoor_value
         
-    if last_humi_outdoor != humi_outdoor_value:
+    if last_humi_outdoor != 0: #humi_outdoor_value:
         set_value_to_buffer(temp_outdoor_value, 220, 50)
         change = True
         last_temp_outdoor = temp_outdoor_value
         
-    if last_rain_outdoor != rain_outdoor_value:
-        set_value_to_buffer(rain_outdoor_value, 220, 75, False)
-        change = True
-        last_rain_outdoor = rain_outdoor_value
-        
     if last_light_outdoor != light_outdoor_value:
-        set_value_to_buffer(light_outdoor_value, 220, 100, False)
+        set_value_to_buffer(light_outdoor_value, 220, 75)
         change = True
         last_light_outdoor = light_outdoor_value
+        
+    if last_rain_outdoor != rain_outdoor_value:
+        set_value_to_buffer(rain_outdoor_value, 220, 100, False)
+        change = True
+        last_rain_outdoor = rain_outdoor_value
         
     if change:
         get_led().on()
