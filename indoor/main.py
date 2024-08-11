@@ -50,6 +50,25 @@ def update_date_values(UTC_OFFSET, last_weekday_number):
         last_weekday_number = weekday_number
         
     return last_weekday_number
+
+def get_first_digit_of_minute():
+    # There is no need to add the UTC_OFFSET
+    # because we only need the minutes
+    date = time.localtime(time.time())
+    minute = date[4]
+    
+    if (10 <= minute <= 19):
+        return 1
+    elif (20 <= minute <= 29):
+        return 2
+    elif (30 <= minute <= 39):
+        return 3
+    elif (40 <= minute <= 49):
+        return 4
+    elif (50 <= minute <= 59):
+        return 5
+    else:
+        return 0
         
 def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor):
     global temp_value, humi_value
@@ -134,7 +153,7 @@ def main():
     last_rain_outdoor = -1
     last_light_outdoor = -1
     
-    count = -1
+    first_digit_of_minute = -1
     
     # date
     set_date_time_NTP()
@@ -144,9 +163,9 @@ def main():
     
     
     while True:
-        
-        if (count == -1 or count >= UPDATE_RATE * 60):
-            count = 0
+        temp_first_digit_minute = get_first_digit_of_minute()
+        if (first_digit_of_minute != temp_first_digit_minute):
+            first_digit_of_minute = temp_first_digit_minute
         
             try:
                 UTC_OFFSET = calculate_UTC_offset(time.localtime())
@@ -159,8 +178,7 @@ def main():
                 print(f"Exception in main: {e}")
                 time.sleep(2)
                 
-        time.sleep(1)
-        count += 1
+        time.sleep(0.1)
         
         run_server(connection)
 
