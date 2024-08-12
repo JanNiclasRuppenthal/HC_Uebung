@@ -89,9 +89,9 @@ def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_out
         last_temp_outdoor = temp_outdoor_value
         
     if last_humi_outdoor != humi_outdoor_value:
-        set_value_to_buffer(temp_outdoor_value, 220, 50)
+        set_value_to_buffer(humi_outdoor_value, 220, 50)
         change = True
-        last_temp_outdoor = temp_outdoor_value
+        last_humi_outdoor = humi_outdoor_value
         
     if last_light_outdoor != light_outdoor_value:
         set_value_to_buffer(light_outdoor_value, 220, 75)
