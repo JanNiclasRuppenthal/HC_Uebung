@@ -11,6 +11,28 @@ weekday_str_list = [
     "Sonntag"
 ]
 
+def set_date_time_NTP():
+    ntptime.settime()
+    
+def get_first_digit_of_minute():
+    # There is no need to add the UTC_OFFSET
+    # because we only need the minutes
+    date = time.localtime(time.time())
+    minute = date[4]
+    
+    if (10 <= minute <= 19):
+        return 1
+    elif (20 <= minute <= 29):
+        return 2
+    elif (30 <= minute <= 39):
+        return 3
+    elif (40 <= minute <= 49):
+        return 4
+    elif (50 <= minute <= 59):
+        return 5
+    else:
+        return 0
+    
 def is_summertime(t):
     year = t[0]
     month = t[1]
@@ -29,9 +51,6 @@ def is_summertime(t):
 
     current_time = time.mktime(t)
     return dst_start <= current_time < dst_end
-
-def set_date_time_NTP():
-    ntptime.settime()
 
 def calculate_UTC_offset(time):
     UTC_OFFSET = -1

@@ -50,25 +50,6 @@ def update_date_values(UTC_OFFSET, last_weekday_number):
         last_weekday_number = weekday_number
         
     return last_weekday_number
-
-def get_first_digit_of_minute():
-    # There is no need to add the UTC_OFFSET
-    # because we only need the minutes
-    date = time.localtime(time.time())
-    minute = date[4]
-    
-    if (10 <= minute <= 19):
-        return 1
-    elif (20 <= minute <= 29):
-        return 2
-    elif (30 <= minute <= 39):
-        return 3
-    elif (40 <= minute <= 49):
-        return 4
-    elif (50 <= minute <= 59):
-        return 5
-    else:
-        return 0
         
 def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor):
     global temp_value, humi_value
@@ -76,15 +57,12 @@ def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_out
     global temp_outdoor_value, rain_outdoor_value, light_outdoor_value
     
     # indoor
-    temp, humi = measure()
-    
-    temp_value = round(temp, 1)
-    humi_value = round(humi, 1)
+    temp_value, humi_value = measure_dht22()
                 
     temp_queue.pop(0)
     temp_queue.append(temp_value)
     humi_queue.pop(0)
-    humi_queue.append(humi)
+    humi_queue.append(humi_value)
     
     # outdoor
     temp_outdoor_value = get_outdoor_sensor_value('/temp_value')
@@ -134,7 +112,8 @@ def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_out
     return last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor
 
 def main():
-    initialize_sensors()
+    initialize_led()
+    initialize_dht22()
     setup_display()
     
     try:
@@ -143,6 +122,12 @@ def main():
         mark_exception_on_display()
         print(f"Exception while connecting: {e}")
         machine.reset()
+        
+    add_IP_to_display(ip)
+    
+    # date
+    set_date_time_NTP()
+    UTC_OFFSET = -1
     
     last_temp = -1
     last_humi = -1
@@ -154,12 +139,6 @@ def main():
     last_light_outdoor = -1
     
     first_digit_of_minute = -1
-    
-    # date
-    set_date_time_NTP()
-    UTC_OFFSET = -1
-    
-    add_IP_to_display(ip)
     
     
     while True:
@@ -175,7 +154,7 @@ def main():
                 
             except Exception as e:
                 mark_exception_on_display()
-                print(f"Exception in main: {e}")
+                print(f"Exception while connecting: {e}")
                 time.sleep(2)
                 
         time.sleep(0.1)

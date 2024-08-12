@@ -2,33 +2,13 @@ import time
 import select
 
 from util.measurements import *
+from util.config_date import get_first_digit_of_minute
 from wifi.web_server import *
-
-UPDATE_RATE = 60
 
 temp_value = -1
 humi_value = -1
 rain_value = -1
 light_value = -1
-
-def get_first_digit_of_minute():
-    # There is no need to add the UTC_OFFSET
-    # because we only need the minutes
-    date = time.localtime(time.time())
-    minute = date[4]
-    
-    if (10 <= minute <= 19):
-        return 1
-    elif (20 <= minute <= 29):
-        return 2
-    elif (30 <= minute <= 39):
-        return 3
-    elif (40 <= minute <= 49):
-        return 4
-    elif (50 <= minute <= 59):
-        return 5
-    else:
-        return 0
 
 def run_server(connection):
     global temp_value, humi_value, light_value, rain_value
@@ -65,10 +45,12 @@ def run_server(connection):
 def main():
     global temp_value, humi_value, light_value, rain_value
     
-    initialize_sensors()
-    led = get_led()
+    initialize_led()
+    initialize_dht22()
+    initialize_photo_resistor()
+    initialize_raindrop_sensor()
     
-    
+    led = get_led()    
     led.on()
     
     try:
@@ -80,14 +62,15 @@ def main():
 
     first_digit_of_minute = -1
     while True:
+        
         temp_first_digit_minute = get_first_digit_of_minute()
         if (first_digit_of_minute != temp_first_digit_minute):
             first_digit_of_minute = temp_first_digit_minute
         
             try:
-                temp_value, humi_value, light_value, rain_value = measure()
-                print(temp_value)
-                print(humi_value)
+                temp_value, humi_value = measure_dht22()
+                light_value = measure_photo_resistor()
+                rain_value = measure_raindrop()
                 
             except Exception as e:
                 machine.reset()
