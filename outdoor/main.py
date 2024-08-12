@@ -11,6 +11,25 @@ humi_value = -1
 rain_value = -1
 light_value = -1
 
+def get_first_digit_of_minute():
+    # There is no need to add the UTC_OFFSET
+    # because we only need the minutes
+    date = time.localtime(time.time())
+    minute = date[4]
+    
+    if (10 <= minute <= 19):
+        return 1
+    elif (20 <= minute <= 29):
+        return 2
+    elif (30 <= minute <= 39):
+        return 3
+    elif (40 <= minute <= 49):
+        return 4
+    elif (50 <= minute <= 59):
+        return 5
+    else:
+        return 0
+
 def run_server(connection):
     global temp_value, humi_value, light_value, rain_value
     
@@ -59,14 +78,21 @@ def main():
       
     led.off()
 
-    count = -1
+    first_digit_of_minute = -1
     while True:
-        if (count == -1 or count >= UPDATE_RATE * 60):
-            count = 0
-            temp_value, humi_value, light_value, rain_value = measure()
-
-        time.sleep(1)
-        count += 1
+        temp_first_digit_minute = get_first_digit_of_minute()
+        if (first_digit_of_minute != temp_first_digit_minute):
+            first_digit_of_minute = temp_first_digit_minute
+        
+            try:
+                temp_value, humi_value, light_value, rain_value = measure()
+                print(temp_value)
+                print(humi_value)
+                
+            except Exception as e:
+                machine.reset()
+                
+        time.sleep(0.1)
         
         run_server(connection)
         

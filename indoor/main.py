@@ -104,13 +104,13 @@ def update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_out
         change = True
         last_humi = humi_value
         
-    #TODO: Change the condition after the sensor is installed
-    if last_temp_outdoor != 0: #temp_outdoor_value:
+    
+    if last_temp_outdoor != temp_outdoor_value:
         set_value_to_buffer(temp_outdoor_value, 220, 25)
         change = True
         last_temp_outdoor = temp_outdoor_value
         
-    if last_humi_outdoor != 0: #humi_outdoor_value:
+    if last_humi_outdoor != humi_outdoor_value:
         set_value_to_buffer(temp_outdoor_value, 220, 50)
         change = True
         last_temp_outdoor = temp_outdoor_value

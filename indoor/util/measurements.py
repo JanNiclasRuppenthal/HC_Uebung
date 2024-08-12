@@ -14,11 +14,6 @@ def get_led():
     global led
     return led
 
-def get_dht22_sensor():
-    global dht22_sensor
-    return dht22_sensor
-
-
 def measure():
     global dht22_sensor
     
