@@ -35,9 +35,6 @@ def get_first_digit_of_minute():
     
 def is_summertime(t):
     year = t[0]
-    month = t[1]
-    day = t[2]
-    weekday = t[6]  # Monday is 0 and Sunday is 6
 
     # DST starts at 2:00 AM on the last Sunday in March
     # Find the last Sunday in March

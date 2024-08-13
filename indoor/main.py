@@ -148,7 +148,7 @@ def main():
         
             try:
                 UTC_OFFSET = calculate_UTC_offset(time.localtime())
-                last_week_day_number = update_date_values(UTC_OFFSET, last_weekday_number)
+                last_weekday_number = update_date_values(UTC_OFFSET, last_weekday_number)
                     
                 last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor = update_measure_values(last_temp, last_humi, last_temp_outdoor, last_humi_outdoor, last_rain_outdoor, last_light_outdoor)
                 

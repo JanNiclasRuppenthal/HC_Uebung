@@ -1,7 +1,6 @@
 import network
 import socket
 from time import sleep
-import machine
 from wifi.wifi_configuration import ssid, password
 
 def connect_to_wifi():
