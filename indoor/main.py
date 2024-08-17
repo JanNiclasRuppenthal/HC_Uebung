@@ -127,17 +127,16 @@ def main():
     
     # date
     set_date_time_NTP()
+
+    # Initialize of variables
     UTC_OFFSET = -1
-    
     last_temp = -1
     last_humi = -1
     last_weekday_number = -1
-    
     last_temp_outdoor = -1
     last_humi_outdoor = -1
     last_rain_outdoor = -1
     last_light_outdoor = -1
-    
     first_digit_of_minute = -1
     
     
@@ -154,7 +153,7 @@ def main():
                 
             except Exception as e:
                 mark_exception_on_display()
-                print(f"Exception while connecting: {e}")
+                print(f"Exception: {e}")
                 time.sleep(2)
                 
         time.sleep(0.1)

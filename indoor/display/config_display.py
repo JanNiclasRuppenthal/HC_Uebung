@@ -29,7 +29,7 @@ def setup_display():
     e_display.text("     %", 220, 75, 0x00)
     
     # static ip address
-    ip_str = "IP Adresse: "
+    ip_str = "IP-Adresse: "
     e_display.text(ip_str, 5, 121, 0x00)
     
     # owner

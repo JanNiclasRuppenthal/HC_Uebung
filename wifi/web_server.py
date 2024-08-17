@@ -12,7 +12,10 @@ def connect_to_wifi():
 def connect():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
+
+    # disable energy saving mode because the pico should be a server
     wlan.config(pm = 0xa11140)
+
     wlan.connect(ssid, password)
     while not wlan.isconnected():
         print('Waiting for a connection to the wifi')
@@ -122,11 +125,8 @@ def webpage_indoor(temp_value, humi_value, temp_queue, humi_queue):
             
             async def main():
                 await micropip.install('matplotlib')
-                await micropip.install('numpy')
-                
                 import matplotlib.pyplot as plt
                 from matplotlib.dates import DateFormatter
-                import numpy as np
 
                 # x-Axis for the last 24 hours
                 now = datetime.now()
@@ -149,7 +149,6 @@ def webpage_indoor(temp_value, humi_value, temp_queue, humi_queue):
         </py-script>
     </body>
 </html>
-
             """
     return str(html)
 
