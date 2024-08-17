@@ -7,7 +7,7 @@ Dies ist die Abgabe des Projekts von Jan Niclas Ruppenthal (Matrikelnummer: 1481
 ----------------------------------------------------------------------------------------------------------------------
 
 
-Der Ergebnisbericht befindet sich in der PDF "HC_Projekt_Ruppenthal.pdf". In diesem Bericht erklaere ich die Funktionsweise, den Aufbau, aufgetretene Probleme und moegliche Verbesserungen meiner Remote-Wetterstation.
+Der Ergebnisbericht befindet sich in der PDF "HC_Projekt_Ruppenthal.pdf". In diesem Bericht erklaere ich die Funktionsweise, den Aufbau, aufgetretene Probleme und moegliche Verbesserungen meiner Remote-Wetterstation. Des Weiteren habe ich ein Video "Ladezeiten_Webseite_mit_PyScript.mp4" hinzugefuegt, welches die langen Ladezeiten der Webseite veranschaulichen soll. Diese Webseite benutzt naemlich das Framework PyScript, damit Graphen auf dem Browser angezeigt werden koennen.  
 
 
 ----------------------------------------------------------------------------------------------------------------------
