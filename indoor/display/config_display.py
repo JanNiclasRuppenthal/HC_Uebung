@@ -55,7 +55,7 @@ def mark_exception_on_display():
     e_display.line(250, 70, 264, 50, 0x00)
     e_display.line(276, 70, 264, 50, 0x00)
     e_display.text("!", 260, 60, 0x00)
-    update_display()
+    e_display.display(e_display.buffer)
     
 def add_IP_to_display(ip):
     global e_display
