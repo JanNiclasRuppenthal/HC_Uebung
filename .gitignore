@@ -194,4 +194,4 @@ replay_pid*
 *.wav
 !resources/*.wav
 *.txt
-!README.txt
+wifi_configuration.py
