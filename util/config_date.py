@@ -38,12 +38,12 @@ def is_summertime(t):
 
     # DST starts at 2:00 AM on the last Sunday in March
     # Find the last Sunday in March
-    last_sunday_march = 31 - (((time.localtime(time.mktime((2024, 3, 31, 3, 0, 0, 0, 0, 0)))[6]) + 1) % 7)
+    last_sunday_march = 31 - (((time.localtime(time.mktime((year, 3, 31, 3, 0, 0, 0, 0, 0)))[6]) + 1) % 7)
     dst_start = time.mktime((year, 3, last_sunday_march, 2, 0, 0, 0, 0, 0))
 
     # DST ends at 3:00 AM on the last Sunday in October
     # Find the last Sunday in October
-    last_sunday_october = 31 - (((time.localtime(time.mktime((2024, 3, 31, 3, 0, 0, 0, 0, 0)))[6]) + 1) % 7)
+    last_sunday_october = 31 - (((time.localtime(time.mktime((year, 3, 31, 3, 0, 0, 0, 0, 0)))[6]) + 1) % 7)
     dst_end = time.mktime((year, 10, last_sunday_october, 3, 0, 0, 0, 0, 0))
 
     current_time = time.mktime(t)

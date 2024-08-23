@@ -7,7 +7,6 @@ def connect_to_wifi():
     ip = connect()
     connection = open_socket(ip)
     return connection, ip
-    
 
 def connect():
     wlan = network.WLAN(network.STA_IF)
@@ -21,9 +20,7 @@ def connect():
         print('Waiting for a connection to the wifi')
         sleep(1)
     ip = wlan.ifconfig()[0]
-    print(f'Connected to wifi with the following ip: {ip}')
     return ip
-    
     
 def open_socket(ip):
     address = (ip, 80)
@@ -31,7 +28,6 @@ def open_socket(ip):
     connection.bind(address)
     connection.listen(1)
     return connection
-    
 
 def webpage_indoor(temp_value, humi_value, temp_queue, humi_queue):
     html = f"""
@@ -152,7 +148,6 @@ def webpage_indoor(temp_value, humi_value, temp_queue, humi_queue):
             """
     return str(html)
 
-
 def webpage_outdoor(temp_value, humi_value, light_value, rain_value):
     html = f"""
 <!DOCTYPE html>
@@ -160,7 +155,7 @@ def webpage_outdoor(temp_value, humi_value, light_value, rain_value):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Wetterstation Raspberry Pi Pico W</title>
+        <title>Außenstation Raspberry Pi Pico W</title>
     </head>
     <body style="background-color:#121212EE;">
 
