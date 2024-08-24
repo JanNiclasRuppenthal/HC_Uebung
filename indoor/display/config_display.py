@@ -77,7 +77,7 @@ class Display():
         
         self.update_display()
         
-    def __set_value_to_buffer(self, value, x, y, float_number=True):
+    def set_value_to_buffer(self, value, x, y, float_number=True):
         value_str = ""
         
         if (float_number):
@@ -87,15 +87,6 @@ class Display():
             
         self.e_display.fill_rect(x, y, 35, 10, 0xff)
         self.e_display.text(value_str, x, y, 0x00)
-        
-    def set_values_to_buffer(self, measure):
-        self.__set_value_to_buffer(measure.temp_value, 120, 50)
-        self.__set_value_to_buffer(measure.humi_value, 120, 75)
-        self.__set_value_to_buffer(measure.temp_outdoor_value, 220, 25)
-        self.__set_value_to_buffer(measure.humi_outdoor_value, 220, 50)
-        self.__set_value_to_buffer(measure.light_outdoor_value, 220, 75)
-        self.__set_value_to_buffer(measure.rain_outdoor_value, 220, 100, False)
-           
         
     def update_display(self):
         self.e_display.display_Partial(self.e_display.buffer)

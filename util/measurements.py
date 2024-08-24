@@ -59,6 +59,15 @@ class Indoor_Measure(Measure):
         self.humi_outdoor_value = -1
         self.rain_outdoor_value = -1
         self.light_outdoor_value = -1
+        
+        
+        # Last read values
+        self.last_temp = -1
+        self.last_humi = -1
+        self.last_temp_outdoor = -1
+        self.last_humi_outdoor = -1
+        self.last_rain_outdoor = -1
+        self.last_light_outdoor = -1
     
     def set_indoor_values(self):
         self.temp_value, self.humi_value = self.__measure_dht22()

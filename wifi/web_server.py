@@ -17,7 +17,6 @@ def connect():
 
     wlan.connect(ssid, password)
     while not wlan.isconnected():
-        print('Waiting for a connection to the wifi')
         sleep(1)
     ip = wlan.ifconfig()[0]
     return ip

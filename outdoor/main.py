@@ -41,6 +41,7 @@ def run_server(connection):
         log_exception(e)
         machine.reset()
 
+
 def main():
     measure.initialize_led()
     measure.initialize_dht22()
@@ -58,9 +59,13 @@ def main():
     measure.led.off()
 
     first_digit_of_minute = -1
+    count = -1
+    
     while True:
-        
-        temp_first_digit_minute = get_first_digit_of_minute()
+        if (count == -1 or count == 60):
+            temp_first_digit_minute = get_first_digit_of_minute()
+            count = 0
+            
         if (first_digit_of_minute != temp_first_digit_minute):
             first_digit_of_minute = temp_first_digit_minute
         
@@ -75,6 +80,7 @@ def main():
                 machine.reset()
                 
         time.sleep(1)
+        count += 1
         
         run_server(connection)
         

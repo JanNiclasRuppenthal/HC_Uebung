@@ -43,18 +43,57 @@ def update_date_values(UTC_OFFSET, last_weekday_number):
         last_weekday_number = weekday_number
         
     return last_weekday_number
+
+
+def check_and_update_values():
+    change = False
     
+    if (measure.last_temp != measure.temp_value):
+        display.set_value_to_buffer(measure.temp_value, 120, 50)
+        measure.last_temp = measure.temp_value
+        change = True
         
+    if (measure.last_humi != measure.humi_value):
+        display.set_value_to_buffer(measure.humi_value, 120, 75)
+        measure.last_humi = measure.temp_value
+        change = True
+    
+    if (measure.last_temp_outdoor != measure.temp_outdoor_value):
+        display.set_value_to_buffer(measure.temp_outdoor_value, 220, 25)
+        measure.last_temp_outdoor = measure.temp_outdoor_value
+        change = True
+    
+    if (measure.last_humi_outdoor != measure.humi_outdoor_value):
+        display.set_value_to_buffer(measure.humi_outdoor_value, 220, 50)
+        measure.last_humi_outdoor = measure.humi_outdoor_value
+        change = True
+    
+    if (measure.last_light_outdoor != measure.light_outdoor_value):
+        display.set_value_to_buffer(measure.light_outdoor_value, 220, 75)
+        measure.last_light_outdoor = measure.light_outdoor_value
+        change = True
+        
+    if (measure.last_rain_outdoor != measure.rain_outdoor_value):
+        display.set_value_to_buffer(measure.rain_outdoor_value, 220, 100, False)
+        measure.last_rain_outdoor = measure.rain_outdoor_value
+        change = True
+    
+    return change
+
+
 def update_measure_values():    
     measure.set_indoor_values()
     measure.set_outdoor_values_http()
     
-    display.set_values_to_buffer(measure)
-    
-    measure.led.on()
-    display.update_display()
-    measure.led.off()
+    change = check_and_update_values()
         
+    if (change):
+        measure.led.on()
+        display.update_display()
+        measure.led.off()
+        change = False
+
+
 def main():
     measure.initialize_led()
     measure.initialize_dht22()
@@ -75,9 +114,13 @@ def main():
     last_weekday_number = -1
     first_digit_of_minute = -1
     temp_first_digit_minute = -1
+    count = -1
 
     while True:
-        temp_first_digit_minute = get_first_digit_of_minute()
+        if (count == -1 or count == 60):
+            temp_first_digit_minute = get_first_digit_of_minute()
+            count = 0
+            
         if (first_digit_of_minute != temp_first_digit_minute):
             first_digit_of_minute = temp_first_digit_minute
 
@@ -94,6 +137,7 @@ def main():
                 time.sleep(2)
                 
         time.sleep(1)
+        count += 1
         
         run_server(connection)
         
