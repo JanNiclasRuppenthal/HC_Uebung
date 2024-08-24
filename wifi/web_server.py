@@ -137,7 +137,6 @@ def webpage_indoor(temp_value, humi_value, temp_queue, humi_queue):
                     
                     return fig
 
-                # Canvas-Element anpassen
                 Element('output_temp').write(create_plot({temp_queue},'Temperatur', '°C'))
                 Element('output_humi').write(create_plot({humi_queue}, 'Feuchtigkeit', '%'))
             asyncio.ensure_future(main())

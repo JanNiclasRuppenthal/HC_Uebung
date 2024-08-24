@@ -59,10 +59,10 @@ def main():
     measure.led.off()
 
     first_digit_of_minute = -1
-    count = -1
+    count_sec = -1
     
     while True:
-        if (count == -1 or count == 60):
+        if (count_sec == -1 or count_sec == 60):
             temp_first_digit_minute = get_first_digit_of_minute()
             count = 0
             
@@ -80,7 +80,7 @@ def main():
                 machine.reset()
                 
         time.sleep(1)
-        count += 1
+        count_sec += 1
         
         run_server(connection)
         

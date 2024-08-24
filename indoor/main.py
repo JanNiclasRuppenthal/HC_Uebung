@@ -91,7 +91,6 @@ def update_measure_values():
         measure.led.on()
         display.update_display()
         measure.led.off()
-        change = False
 
 
 def main():
@@ -110,14 +109,15 @@ def main():
 
     set_date_time_NTP()
 
+    # Initialize variables
     UTC_OFFSET = -1
     last_weekday_number = -1
     first_digit_of_minute = -1
     temp_first_digit_minute = -1
-    count = -1
+    count_sec = -1
 
     while True:
-        if (count == -1 or count == 60):
+        if (count_sec == -1 or count_sec == 60):
             temp_first_digit_minute = get_first_digit_of_minute()
             count = 0
             
@@ -137,7 +137,7 @@ def main():
                 time.sleep(2)
                 
         time.sleep(1)
-        count += 1
+        count_sec += 1
         
         run_server(connection)
         

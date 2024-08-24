@@ -1,4 +1,3 @@
-import sys
 import time
 from util.config_date import calculate_UTC_offset
 
