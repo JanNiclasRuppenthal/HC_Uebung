@@ -59,13 +59,15 @@ def main():
     measure.led.off()
 
     first_digit_of_minute = -1
-    count_sec = -1
+    last_gc_time = time.time()
     
     while True:
-        if (count_sec == -1 or count_sec == 60):
-            temp_first_digit_minute = get_first_digit_of_minute()
-            count = 0
+        # clear memory every 3 minutes
+        if (time.time() - last_gc_time >= 180):
+            gc.collect()  
+            last_gc_time = time.time()
             
+        temp_first_digit_minute = get_first_digit_of_minute()
         if (first_digit_of_minute != temp_first_digit_minute):
             first_digit_of_minute = temp_first_digit_minute
         
@@ -80,7 +82,6 @@ def main():
                 machine.reset()
                 
         time.sleep(1)
-        count_sec += 1
         
         run_server(connection)
         

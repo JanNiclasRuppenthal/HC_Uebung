@@ -109,18 +109,19 @@ def main():
 
     set_date_time_NTP()
 
-    # Initialize variables
     UTC_OFFSET = -1
     last_weekday_number = -1
     first_digit_of_minute = -1
     temp_first_digit_minute = -1
-    count_sec = -1
+    last_gc_time = time.time()
 
     while True:
-        if (count_sec == -1 or count_sec == 60):
-            temp_first_digit_minute = get_first_digit_of_minute()
-            count = 0
+        # clear memory every 3 minutes
+        if (time.time() - last_gc_time >= 180):
+            gc.collect()  
+            last_gc_time = time.time()
             
+        temp_first_digit_minute = get_first_digit_of_minute()
         if (first_digit_of_minute != temp_first_digit_minute):
             first_digit_of_minute = temp_first_digit_minute
 
@@ -130,14 +131,14 @@ def main():
                 update_measure_values()
                 
                 # clear memory
-                gc.collect() 
+                gc.collect()
+                
             except Exception as e:
                 display.mark_exception_on_display()
                 log_exception(e)
                 time.sleep(2)
                 
         time.sleep(1)
-        count_sec += 1
         
         run_server(connection)
         
